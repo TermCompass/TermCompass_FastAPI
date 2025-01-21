@@ -1,17 +1,38 @@
 import base64
+import json
+import json.tool
+import os
 from pprint import pprint
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import List
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM , PreTrainedTokenizerFast
 
 # modules
 from module.file2text import file2text
-from model.review import review
-from model.generate import generate
-from model.modify import modify
-from model.chat import chat
+from module import global_var as gv
+from task.review import review
+from task.generate import generate
+from task.modify import modify
+from task.chat import chat
 
 app = FastAPI()
 
+# 0. 모델 로드 ------------------------------------------------------------------------------------
+
+# 모델과 토크나이저 로드
+# model_name = "beomi/Llama-3-Open-Ko-8B"
+model_name = "Bllossom/llama-3.2-Korean-Bllossom-3B"
+gv.model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+gv.tokenizer = PreTrainedTokenizerFast.from_pretrained(model_name)
+
+# 패딩 토큰 설정
+gv.tokenizer.pad_token = gv.tokenizer.eos_token
+gv.model.config.pad_token_id = gv.tokenizer.pad_token_id
+
+print("모델 자료 타입" + str(type(gv.model)))
+print("토크나이저 자료 타입" + str(type(gv.tokenizer)))
 
 # 1. 검토 (텍스트 or 파일 -> 검토 결과 List) ------------------------------------------------------
 class review_form(BaseModel):
@@ -56,26 +77,28 @@ class modify_form(BaseModel):
 
 # 2-1. 생성요청 (텍스트 -> 표준문서 ID)
 @app.post("/generate")
-def generate(data: generate_form):
+def generate_term(data: generate_form):
     pprint(data)
+    generate_result = generate(data.content)
     return {"result": "표준문서 ID"}
 
 
 # 2-2. 항목추가/수정 (텍스트 -> 변경목록 List, 업데이트된 context)
 @app.post("/modify")
-def modify(data: modify_form):
+def modify_term(data: modify_form):
     pprint(data)
+    modify_result = modify(data.request, data.current, data.context)
     return {"result": {"answer": "[변경 List]", "context": "업데이트된 context"}}
 
 
-# 3. 챗봇 (텍스트 -> 답변, 업데이트된 context) ----------------------------------------------------
+# 3. 챗봇 ( 질문, context List -> 답변, 업데이트된 context List ) ----------------------------------------------------
 class chat_form(BaseModel):
     # task: str = "chat"
     request: str
-    context: str
-
+    context: list
 
 @app.post("/chat")
-def chat(data: chat_form):
-    pprint(data)
-    return {"result": {"answer": "답변", "context": "업데이트된 context"}}
+def chatbot(data: chat_form):
+    chat_result = chat(data.request, data.context)
+    print(chat_result)
+    return {"result" : chat_result }

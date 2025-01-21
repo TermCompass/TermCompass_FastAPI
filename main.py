@@ -1,38 +1,43 @@
 import base64
-import json
-import json.tool
-import os
 from pprint import pprint
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM , PreTrainedTokenizerFast
+from transformers import LlamaForCausalLM , PreTrainedTokenizerFast
 
-# modules
+app = FastAPI()
+
+# 0-1. 모델 로드 ------------------------------------------------------------------------------------
+from module.global_var import model, tokenizer
+
+# 모델과 토크나이저 로드
+# model_name = "beomi/Llama-3-Open-Ko-8B"
+model_name = "Bllossom/llama-3.2-Korean-Bllossom-3B"
+model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+tokenizer = PreTrainedTokenizerFast.from_pretrained(model_name)
+
+# 패딩 토큰 설정
+tokenizer.pad_token = tokenizer.eos_token
+model.config.pad_token_id = tokenizer.pad_token_id
+
+print("모델 객체 타입 " + str(type(model)))
+print("토크나이저 객체 타입 " + str(type(tokenizer)))
+
+# 로드 후 전역 변수 업데이트
+import module.global_var as global_var
+global_var.model = model
+global_var.tokenizer = tokenizer
+
+# 0-2. 모듈 로드 ------------------------------------------------------------------------------------
+# 모델, 토크나이저 초기화 후에 모듈을 로드해야 전역으로 선언된 모델, 토크나이저를 사용할 수 있음
 from module.file2text import file2text
-from module import global_var as gv
+from module.task_planner import tasker
 from task.review import review
 from task.generate import generate
 from task.modify import modify
 from task.chat import chat
 
-app = FastAPI()
 
-# 0. 모델 로드 ------------------------------------------------------------------------------------
-
-# 모델과 토크나이저 로드
-# model_name = "beomi/Llama-3-Open-Ko-8B"
-model_name = "Bllossom/llama-3.2-Korean-Bllossom-3B"
-gv.model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
-gv.tokenizer = PreTrainedTokenizerFast.from_pretrained(model_name)
-
-# 패딩 토큰 설정
-gv.tokenizer.pad_token = gv.tokenizer.eos_token
-gv.model.config.pad_token_id = gv.tokenizer.pad_token_id
-
-print("모델 자료 타입" + str(type(gv.model)))
-print("토크나이저 자료 타입" + str(type(gv.tokenizer)))
 
 # 1. 검토 (텍스트 or 파일 -> 검토 결과 List) ------------------------------------------------------
 class review_form(BaseModel):
@@ -99,6 +104,7 @@ class chat_form(BaseModel):
 
 @app.post("/chat")
 def chatbot(data: chat_form):
+    task_result = tasker(data.request)
     chat_result = chat(data.request, data.context)
-    print(chat_result)
-    return {"result" : chat_result }
+    # print(chat_result)
+    return {"result" : chat_result , "task" : task_result}

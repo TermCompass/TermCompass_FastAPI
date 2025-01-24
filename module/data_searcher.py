@@ -17,14 +17,10 @@ def search_data(keywords : list):
     return search_result
 
 # 판례 검색
-from sqlalchemy import create_engine, text
-
-from sqlalchemy import create_engine, text
-
 def search_case(keywords: list):
     result = []
     query = text("""
-        SELECT DISTINCT cls.case_id, cls.case_name, cls.summary, cls.판례내용
+        SELECT DISTINCT cls.case_id, cls.case_name, cls.summary
         FROM case_law cl
         JOIN case_law_summary cls ON cl.case_id = cls.case_id
         WHERE (
@@ -41,11 +37,11 @@ def search_case(keywords: list):
             params = {"keyword": f"%{keyword}%"}
             rows = connection.execute(query, params).fetchall()
             print(f"======================== keyword : {keyword} =======================================")
-            # Row 객체를 딕셔너리로 변환
+            
+            # 각 row를 문자열 1개로 변환하여 리스트에 추가
             for row in rows:
                 print(row)
-                result.append(", ".join(row))  # 각 row를 문자열 1개로 변환하여 리스트에 추가
-
+                result.append(", ".join(row)) 
     return result
 
     

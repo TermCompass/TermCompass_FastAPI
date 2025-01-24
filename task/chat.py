@@ -9,7 +9,7 @@ def chat(request: str, context_list: list):
         context_list = context_list[-max_context:] 
 
     # TODO: 키워드 추출해 참고자료 DB조회해서 질문에 추가
-
+    
     text = f"""
     1. input = {request}
     2. context = {context_list}

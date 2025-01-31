@@ -1,2 +1,2 @@
 def review (input):
-    return {'result':input}
+    return input

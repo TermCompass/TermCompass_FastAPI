@@ -1,6 +1,5 @@
-import base64
 from pprint import pprint
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 import torch
 from transformers import LlamaForCausalLM , PreTrainedTokenizerFast
@@ -38,29 +37,20 @@ from task.modify import modify
 from task.chat import chat
 
 # 1. 검토 (텍스트 or 파일 -> 검토 결과 List) ------------------------------------------------------
-class review_form(BaseModel):
-    # task: str = "review"
-    content: str
 
 # 1-1. 검토 (텍스트)
 @app.post("/review_text")
-def review_text(data: review_form):
-    pprint(data)
-    review_result = review(data.content)
-    return {"result": "검토 결과 List"}
+def review_text(data: str):
+    return {"result": review(data) }
 
 # 1-2. 검토 (파일)
 @app.post("/review_file")
-def review_text(data: review_form):  # content: Base64로 인코딩된 파일 문자열
-    # Base64.getUrlEncoder().encodeToString(fileBytes); -> base64.urlsafe_b64decode() 특수문자 문제시 인코딩 변경 고려 ???
-    file = base64.b64decode(data.content)
+async def review_text(file: UploadFile = File(...)):
     try:
-        text = file2text(file)
-        pprint(text)
-        review_result = review(text)
-        return {"result": "[검토 결과 List]"}
-    except:
-        return {"result": "파일을 읽을 수 없습니다."}
+        text = await file2text(file)
+        return { "result": review(text) }
+    except TypeError as e:
+        return {"result": f"파일을 읽을 수 없습니다. {e}"}
 
 # 2. 생성요청 ------------------------------------------------------------------------------------
 class generate_form(BaseModel):

@@ -1,2 +1,2 @@
 def modify(input):
-    return {'result':input}
+    return input

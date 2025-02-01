@@ -279,6 +279,91 @@ def update_law():
  
     # return 없음!
 
+
+def keyword_law(law, api_key = "eogus2469"):
+    """
+    법령일련번호를 활용하여 세부 법령내용을 키워드 추출용 DB형태로 만드는 함수.
+    """
+    ids = law['law_id']
+
+    for law_id in [id for id in ids]: # DataFrame 형태의 ids를 리스트 형태로 변환 후, for문에 진행
+        url = f"http://www.law.go.kr/DRF/lawService.do?OC={api_key}&target=law&MST={law_id}&type=XML"
+        
+        response = requests.get(url)
+        xml_str = response.text
+        root = ET.fromstring(xml_str)
+        time.sleep(1)
+        
+        law_name = root.findtext(".//법령명_한글")
+        name = root.findtext(".//소관부처명")
+        publication_date = root.findtext(".//공포일자")
+        effective_date = root.findtext(".//시행일자")
+    
+        df2_data = {"law_id": [f"{law_id}"], "law_name": [f"{law_name}"], "name": [f"{name}"], "publication_date": [f"{publication_date}"], "effective_date": [f"{effective_date}"]}
+        df2 = pd.DataFrame(df2_data).iloc[0].to_frame().T
+    
+        root = ET.fromstring(xml_str)
+        
+        rows = []
+        
+        for article_elem in root.findall('.//조문단위'):
+            article_no = article_elem.findtext('조문번호', default='')
+            article_title = article_elem.findtext('조문제목', default='')
+            clause_label = f"제{article_no}조({article_title})" if article_no else article_title
+            
+            para_elems = article_elem.findall('.//항')
+            if not para_elems:
+                # 항이 없으면 조문내용만 '내용'으로 처리하거나 생략
+                continue
+            
+            for para_elem in para_elems:
+                para_no = para_elem.findtext('항번호', default='').strip()
+                para_content = para_elem.findtext('항내용', default='').strip()
+                
+                # 항 내용을 먼저 한 행에 담는다
+                rows.append({
+                    '조항번호': clause_label,
+                    '항': para_no,
+                    '내용': para_content
+                })
+                
+                # <호> 순회
+                for ho_elem in para_elem.findall('.//호'):
+                    ho_no = ho_elem.findtext('호번호', default='').strip()
+                    ho_cont = ho_elem.findtext('호내용', default='').strip()
+        
+                    # (핵심) 호내용 앞에 '1.' '2.' 같은 번호가 있다면 제거
+                    #       예: "2. 제1호 외의..." → "제1호 외의..."
+                    ho_cont_clean = re.sub(r'^[\s]*\d+\.\s*', '', ho_cont)
+        
+                    # 최종 출력: "호번호 + (호내용에서 번호 제거한 텍스트)"
+                    #           예: "2. 제1호 외의..."
+                    combined = f"{ho_no} {ho_cont_clean}".strip()
+        
+                    rows.append({
+                        '조항번호': clause_label,
+                        '항': para_no,
+                        '내용': combined
+                    })
+        
+        df = pd.DataFrame(rows, columns=['조항번호','항','내용'])
+        
+        df_grouped = (
+            df.groupby(["조항번호", "항"])["내용"]
+              .apply(lambda rows: " ".join(rows))  # or "\n".join(rows)
+              .reset_index(name="내용")
+        )
+        df_grouped = df_grouped.rename(columns={"조항번호": "article_number", "항": "paragraph", "내용": "text"})
+        
+        df2 = pd.concat([df2] * len(df_grouped), ignore_index=True)
+        merged_df = pd.concat([df2, df_grouped], axis=1)
+        
+        law_na = law_name.replace(' ', '_')
+        
+        merged_df.to_excel(f"./Data/Database/keyword_{law_na}.xlsx", index=False)
+    print("[keyword_law] 최신화 완료!")
+    # return 없음! 
+
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!파이프라인!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # 초기 사전 세팅 / DB가 비어있는 상태에서 최초 1회만 실행 ( 2개 )
@@ -286,7 +371,7 @@ def init_setup():
     law = load_list_law_api()
     law = call_list_law(law=law)
     process_row_law(law=law)
-
+    keyword_law(law = law)
 
 # 기존 법령DB를 최신화하는 함수 작성 예정
 

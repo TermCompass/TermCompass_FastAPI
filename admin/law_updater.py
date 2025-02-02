@@ -238,7 +238,7 @@ def process_row_law(law, api_key = "eogus2469"):
 
         law_na = law_name.replace(' ', '_')
         
-        df.to_excel(f"./test/{law_na}.xlsx", index=False)
+        df.to_excel(f"./Data/Dataframe/{id}_{law_na}.xlsx", index=False)
     print("[process_row_law] 법령 DataFrame 생성 완료!")
     # 함수 끝! return 없음!
 
@@ -246,7 +246,11 @@ def update_law():
     """
     기존 법령 DB와 새로운 법령 DB를 비교하여, DB를 최신화하는 함수입니다.
     """
-    old_df = pd.read_excel("법령목록.xlsx")
+    ##### DataBase -> DataFrame형태로 변환하는 코드 필요! #####
+    ##### DataBase -> DataFrame형태로 변환하는 코드 필요! #####
+    ##### DataBase -> DataFrame형태로 변환하는 코드 필요! #####
+
+    old_df = pd.read_excel("./Data/Dataframe/법령목록.xlsx")
     old_df['law_id'] = old_df['law_id'].astype(int)
     old_df['publication_date'] = old_df['publication_date'].astype(int)
     new_df = load_list_law_api()
@@ -272,7 +276,12 @@ def update_law():
     if len(updated_law_ids) == 0:
         print("[update_law] 헌행법령 DB가 최신 상태입니다!")
     else:
-        old_df.to_excel("법령목록.xlsx", index=False)
+        old_df.to_excel("./Data/Dataframe/법령목록.xlsx", index=False)
+
+        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
+        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
+        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####    
+        
         new_law = pd.DataFrame(updated_law_ids, columns=['law_id'])
         process_row_law(law=new_law, api_key = "eogus2469")
         print(f"[update_law] {len(updated_law_ids)}개의 현행법령 DB를 최신화했습니다!")
@@ -360,8 +369,13 @@ def keyword_law(law, api_key = "eogus2469"):
         
         law_na = law_name.replace(' ', '_')
         
-        merged_df.to_excel(f"./Data/Database/keyword_{law_na}.xlsx", index=False)
-    print("[keyword_law] 최신화 완료!")
+        merged_df.to_excel(f"./Data/Dataframe/{law_id}_keyword_{law_na}.xlsx", index=False)
+
+        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
+        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
+        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
+
+    print("[keyword_law] keyword 추출용 Dataframe 생성 완료!")
     # return 없음! 
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!파이프라인!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -370,10 +384,23 @@ def keyword_law(law, api_key = "eogus2469"):
 def init_setup():
     law = load_list_law_api()
     law = call_list_law(law=law)
+    law.to_excel("./Data/Dataframe/법령목록.xlsx", index=False)
+
+    ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
+    ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
+    ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
+
     process_row_law(law=law)
     keyword_law(law = law)
+
+init_setup()
+
+
+
+
+
+#############################
 
 # 기존 법령DB를 최신화하는 함수 작성 예정
 
 
-# init_setup()

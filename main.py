@@ -50,6 +50,8 @@ async def review_text(file: UploadFile = File(...)):
         text = await file2text(file)
         return { "result": review(text) }
     except TypeError as e:
+        return {"result": e}
+    except Exception as e:
         return {"result": f"파일을 읽을 수 없습니다. {e}"}
 
 # 2. 생성요청 ------------------------------------------------------------------------------------

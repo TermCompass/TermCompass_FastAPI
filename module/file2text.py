@@ -75,7 +75,7 @@ def convert_to_pdf(dir,file):
     
 
 # 특정 파일 보안삭제하는 메서드
-def secure_delete(file_path, passes=3):
+def secure_delete(file_path : Path, passes=3):
     
     # 파일이 존재하는지 확인
     if not os.path.isfile(file_path):
@@ -94,4 +94,4 @@ def secure_delete(file_path, passes=3):
 
     # 파일 삭제
     os.remove(file_path)
-    print(f"{file_path}가 보안 삭제되었습니다.")
+    print(f"임시 {file_path.suffix}가 보안 삭제되었습니다.")

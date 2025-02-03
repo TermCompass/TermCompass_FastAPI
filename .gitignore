@@ -1,0 +1,6 @@
+admin/*
+Data/*
+.vscode/*
+*/__pycache__/*
+__pycache__/*
+원본/*

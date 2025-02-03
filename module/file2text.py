@@ -11,20 +11,29 @@ async def file2text(file: UploadFile):
 
     # print(file.content_type)
 
+    # pdf인 경우
     if file.content_type == "application/pdf":
 
         # file 읽기
         content = await file.read()
+
         # pdf -> 문자열 추출
         result = extract_text(BytesIO(content))
+
         return result    
     
+    # pdf가 아닌 경우 ( hwp, hwpx 예상 )
     else:
         try:
 
-            # .hwp 파일 쓰기
+            # 경로 설정
             dir = "./temp/"
             path = Path(f"{dir}{file.filename}")
+
+            # 디렉터리가 없으면 생성
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+            # .hwp 파일 쓰기
             with path.open("wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
 
@@ -67,6 +76,7 @@ def convert_to_pdf(dir,file):
 
 # 특정 파일 보안삭제하는 메서드
 def secure_delete(file_path, passes=3):
+    
     # 파일이 존재하는지 확인
     if not os.path.isfile(file_path):
         raise ValueError(f"{file_path}는 존재하지 않는 파일입니다.")

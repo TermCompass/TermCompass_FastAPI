@@ -1,7 +1,8 @@
 __pycache__/*
 module/__pycache__/*
 task/__pycache__/*
-Untitled0.ipynb
 .vscode/settings.json
 Data/*
 admin/api_key
+temp/*
+원본/*

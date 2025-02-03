@@ -1,6 +1,8 @@
-admin/*
-Data/*
-.vscode/*
-*/__pycache__/*
 __pycache__/*
+module/__pycache__/*
+task/__pycache__/*
+.vscode/settings.json
+Data/*
+admin/api_key
+temp/*
 원본/*

@@ -6,3 +6,4 @@ pipeline_test.ipynb
 .vscode/settings.json
 Data/*
 admin/api_key
+admin/__pycache__/*

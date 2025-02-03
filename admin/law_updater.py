@@ -7,6 +7,8 @@ import openai
 import itertools
 import ast
 import time
+import glob
+import os
 
 # # SQLAlchemy 엔진 생성
 # from sqlalchemy import create_engine,inspect
@@ -242,50 +244,67 @@ def process_row_law(law, api_key = "eogus2469"):
     print("[process_row_law] 법령 DataFrame 생성 완료!")
     # 함수 끝! return 없음!
 
+
+
 def update_law():
     """
-    기존 법령 DB와 새로운 법령 DB를 비교하여, DB를 최신화하는 함수입니다.
+    법령 DB를 최신화하는 함수입니다.
+    현행법령 목록과 보유하고 있는 법령 목록을 비교한 후, 법령DB를 최신화(생성, 삭제)합니다.
+    같은 법령이더라도 법령이 최신화된 경우, 법령일련번호가 다르게 부여됩니다.
+    (ex)
+    [law_id | law_name | publication_date | effective_date]
+    [267737 | 개인정보 보호위원회 직제 시행 규칙 | 20241219 | 20241231]
+    [268957 | 개인정보 보호위원회 직제 시행 규칙 | 20250131 | 20250131]
     """
-    ##### DataBase -> DataFrame형태로 변환하는 코드 필요! #####
-    ##### DataBase -> DataFrame형태로 변환하는 코드 필요! #####
-    ##### DataBase -> DataFrame형태로 변환하는 코드 필요! #####
+    ### 법령목록 최신화 함수
+    # 법령목록 DB를 가져오기
+    list_law1 = pd.read_excel("./Data/Dataframe/법령목록.xlsx")
+    list_law1['law_id'] = list_law1['law_id'].astype(str)
 
-    old_df = pd.read_excel("./Data/Dataframe/법령목록.xlsx")
-    old_df['law_id'] = old_df['law_id'].astype(int)
-    old_df['publication_date'] = old_df['publication_date'].astype(int)
-    new_df = load_list_law_api()
-    new_df = call_list_law(law=new_df)
-    new_df['law_id'] = new_df['law_id'].astype(int)
-    new_df['publication_date'] = new_df['publication_date'].astype(int)
-    new_df['effective_date'] = new_df['effective_date'].astype(int)
-    updated_law_ids = []
-    # 기존의 법령에서 변경사항이 발생한 경우
-    merged_df = pd.merge(old_df, new_df, on='law_id', suffixes=('_old', '_new'))
-    for _, row in merged_df.iterrows():
-        if row['publication_date_old'] != row['publication_date_new']:  # publication_date가 변경된 경우
-            updated_law_ids.append(row['law_id'])
-            filtered_df = new_df[new_df['law_id'] == updated_law_ids[-1]]
-            old_df = pd.concat([old_df, filtered_df], ignore_index=True)
-    #새로운 법령이 추가된 경우
-    new_law_ids = set(new_df['law_id']) - set(old_df['law_id'])  # 차집합: new_df에는 있고 old_df에는 없는 law_id
-    updated_law_ids.extend(list(new_law_ids))
-    for id in updated_law_ids:
-        filtered_df = new_df[new_df['law_id'] == id]
-        old_df = pd.concat([old_df, filtered_df], ignore_index=True)
- 
-    if len(updated_law_ids) == 0:
-        print("[update_law] 헌행법령 DB가 최신 상태입니다!")
-    else:
-        old_df.to_excel("./Data/Dataframe/법령목록.xlsx", index=False)
+    # 최신 법령 목록 가져오기(API 호출)
+    list_law2 = load_list_law_api()
+    list_law2 = call_list_law(law=list_law2)
 
-        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
-        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
-        ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####    
-        
-        new_law = pd.DataFrame(updated_law_ids, columns=['law_id'])
-        process_row_law(law=new_law, api_key = "eogus2469")
-        print(f"[update_law] {len(updated_law_ids)}개의 현행법령 DB를 최신화했습니다!")
- 
+    ##### 두 DataFrame을 비교하기 (데이터 처리)
+    folder_path = "./Data/Dataframe/"
+    excel_files = glob.glob(os.path.join(folder_path, "*.xlsx"))
+    # - 기존 법령목록 DB에도 있고, 최신 법령 목록에도 있는 법령 -> 유지
+    # None
+
+
+    # - 기존 법령목록 DB에 있지만, 최신 법령 목록에는 없는 법령 -> 삭제
+    df_only_in_list_law1 = list_law1[~list_law1['law_id'].isin(list_law2['law_id'])]
+    if len(df_only_in_list_law1) != 0:
+        # keyword 추출용 DB 삭제, AI 모델 학습용 DB 삭제
+        # 해당 DB 삭제하는 코드 작성 필요!
+        del_law_ids = [id for ids in df_only_in_list_law1['law_id']] # list 형태로 변환
+
+        for file_path in excel_files:
+            file_name = os.path.basename(file_path)  # 파일명만 추출
+            for law_id in del_law_ids:
+                law_id = str(law_id)
+                if law_id in file_name:  # 파일명에 해당 law_id가 포함되어 있으면 삭제
+                    try:
+                        os.remove(file_path)
+                    except Exception as e:
+                        print(f"[update_law] {file_name} 법령 최신화 실패! (삭제 실패): {e}")
+
+        list_law2.to_excel("./Data/Dataframe/법령목록.xlsx", index=False)
+        print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
+
+    # - 기존 법령목록 DB에 없고, 최신 법령 목록에는 있는 법령 -> 추가
+    df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
+    if len(df_only_in_list_law2) != 0:
+        # keyword 추출용 DB 생성, AI 모델 학습용 DB 생성
+        # 해당 DB 생성하는 코드 작성 필요!
+        process_row_law(law=df_only_in_list_law2)
+        keyword_law(law=df_only_in_list_law2)
+
+        list_law2.to_excel("./Data/Dataframe/법령목록.xlsx", index=False)
+        print(f"[update_law] {len(df_only_in_list_law2)}개의 법령 최신화 (생성)")
+
+    if (len(df_only_in_list_law1) == 0) and (len(df_only_in_list_law2) == 0):
+        print("[update_law] 현재 법령목록이 최신 상태입니다!")
     # return 없음!
 
 
@@ -392,15 +411,11 @@ def init_setup():
 
     process_row_law(law=law)
     keyword_law(law = law)
+    
+    # return 없음!
+
+
 
 init_setup()
-
-
-
-
-
-#############################
-
-# 기존 법령DB를 최신화하는 함수 작성 예정
-
+update_law()
 

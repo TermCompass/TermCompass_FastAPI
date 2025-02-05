@@ -5,7 +5,8 @@ from sqlalchemy import create_engine,text
 # 키워드 목록을 넣으면, 각 분야 데이터들을 검색해서 리스트 딕셔너리로 반환하는 모듈
 
 # SQLAlchemy 엔진 생성
-conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:9906/termcompass')
+# conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:9906/termcompass')
+from module.global_var import conn
 
 # 데이터 검색
 def search_data(keywords : list):

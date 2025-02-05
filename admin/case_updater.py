@@ -9,7 +9,14 @@ import os
 
 # SQLAlchemy 엔진 생성
 from sqlalchemy import create_engine,inspect
-conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:9906/termcompass')
+
+
+try:
+    conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:9906/termcompass')
+    print("MySQL 연결 성공!")
+except Exception as e:
+    print(f"MySQL 연결 실패: {e}")
+
 
 # OpenAPI 클라이언트 설정
 import openai

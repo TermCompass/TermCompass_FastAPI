@@ -6,3 +6,9 @@ Data/*
 admin/api_key
 temp/*
 원본/*
+
+# 법령 최신화 테스트용 코드
+test.ipynb
+법령목록.xlsx
+267337_keyword_개인정보_보호위원회_직제_시행규칙.xlsx
+267337_개인정보_보호위원회_직제_시행규칙.xlsx

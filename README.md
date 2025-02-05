@@ -8,7 +8,6 @@ TermCompass AI모델 처리
    │  └─api_key
    ├─Data
    │  ├─Database
-   │  └─Dataframe ([임시]개발용)
    ├─module
    └─task
 ```
@@ -72,6 +71,3 @@ or
 }
 ```
 ---
-법령목록 최신화 과정
-같은 법령이더라도 변경사항이 발생하는 경우, 법령일련번호가 다름.
-![법령목록_최신화](./image/법령목록_최신화.PNG)

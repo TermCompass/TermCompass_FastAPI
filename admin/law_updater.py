@@ -21,12 +21,12 @@ DB_HOST = f"127.0.0.1:{port}"
 DB_NAME = "termcompass_law"
 
 # DB가 없을 경우 자동 생성
-engine = create_engine(f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
+engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
 with engine.connect() as conn:
     conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {DB_NAME};"))
 
 try:
-    engine = create_engine(f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
+    engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
     print("MySQL 연결 성공!")
 except Exception as e:
     print(f"MySQL 연결 실패: {e}")

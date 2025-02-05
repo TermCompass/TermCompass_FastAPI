@@ -1,0 +1,12 @@
+# requirements.txt for Python 3.12.8 environment
+
+requests
+pandas
+openai
+SQLAlchemy
+fastapi
+uvicorn
+numpy
+pydantic
+torch
+transformers

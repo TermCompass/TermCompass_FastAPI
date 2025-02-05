@@ -1,4 +1,6 @@
+import asyncio
 import time
+from fastapi import WebSocket
 import requests
 import xml
 import xml.etree.ElementTree as ET
@@ -7,16 +9,13 @@ import re
 import json
 import os
 
+# 웹소켓 send 함수
+from module.websocket_sender import ws_send
+
 # SQLAlchemy 엔진 생성
-from sqlalchemy import create_engine,inspect
-
-
-try:
-    conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:9906/termcompass')
-    print("MySQL 연결 성공!")
-except Exception as e:
-    print(f"MySQL 연결 실패: {e}")
-
+from sqlalchemy import create_engine, inspect
+# conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:3306/TermCompass')
+from module.global_var import conn
 
 # OpenAPI 클라이언트 설정
 import openai
@@ -232,9 +231,13 @@ def process_row(id):
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!파이프라인!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-# 초기 사전 세팅 / DB가 비어있는 상태에서 최초 1회만 실행 ( 2개 )
-def init_setup():
-    df1 = load_list_api(api_key="kyj9447", PageNumbers=1, display=2)
+# 초기 사전 세팅 / DB가 비어있는 상태에서 최초 1회만 실행 ( 1개 )
+async def init_setup(ws : WebSocket):
+    
+    text = "초기 세팅 실행...\n"
+    await ws_send(ws,text)
+
+    df1 = load_list_api(api_key="kyj9447", PageNumbers=1, display=1)
     df1.to_sql("case_law", conn, if_exists="replace", index=False) # 저장
 
     # case_ids = df1["case_id"].tolist()
@@ -246,22 +249,35 @@ def init_setup():
     # 차집합 df에 for문 사용, summary_df 데이터프레임 생성
     summary_list = []
     for target_row in df1.itertuples():
-        print("판례번호:", target_row.case_id, "사건명:", target_row.case_name, " 처리중... ")
+
+        text = f"판례번호:, {target_row.case_id}, 사건명:, {target_row.case_name},  처리중... "
+        await ws_send(ws,text)
+
         summary_list.append(process_row(target_row.case_id))
 
     summary_df = pd.DataFrame(summary_list)
     summary_df.to_sql("case_law_summary", conn, if_exists="replace", index=False) # 저장
+                
+    text = "초기 세팅 완료\n"
+    await ws_send(ws,text)
 
 # 최신 판례 업데이트
-def update_case_law():
-    df1 = load_list_api(api_key="kyj9447", PageNumbers=1, display=8) # 최신 판례 로드 8개 (API)
+async def update_case_law(ws : WebSocket):
+
+    text = "업데이트 실행...\n"
+    await ws_send(ws,text)
+
+    df1 = load_list_api(api_key="kyj9447", PageNumbers=1, display=10) # 최신 판례 로드 10개 (API)
     df2 = load_list_db() # DB의 기존 판례 로드
 
     # 'case_id'을 기준으로 차집합 생성
     target_df = df1.merge(df2, how='left', indicator=True)
     target_df = target_df[target_df['_merge'] == 'left_only'].drop(columns=['_merge'])
     count = target_df.shape[0]
-    print(f"{count}개의 신규 판례가 확인되었습니다.")
+
+    text = f"{count}개의 신규 판례가 확인되었습니다."
+    await ws_send(ws,text)
+
     target_df.to_sql("case_law", conn, if_exists="append", index=False) # 저장
 
     # # 차집합의 'case_id' 리스트를 사용해 summary_df 데이터프레임 생성
@@ -274,11 +290,17 @@ def update_case_law():
     # 차집합 df에 for문 사용, summary_df 데이터프레임 생성
     summary_list = []
     for target_row in target_df.itertuples():
-        print("판례번호:", target_row.case_id, "사건명:", target_row.case_name, " 처리중... ")
+
+        text = f"판례번호:, {target_row.case_id}, 사건명:, {target_row.case_name}, 처리중... "
+        await ws_send(ws,text)
+
         summary_list.append(process_row(target_row.case_id))
 
     summary_df = pd.DataFrame(summary_list)
     summary_df.to_sql("case_law_summary", conn, if_exists="append", index=False) # 저장
+
+    text = "업데이트 완료\n"
+    await ws_send(ws,text)
 
 # init_setup()
 # update_case_law()

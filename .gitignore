@@ -6,3 +6,5 @@ Data/*
 admin/api_key
 temp/*
 원본/*
+result.csv
+admin/__pycache__/*

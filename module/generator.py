@@ -13,9 +13,9 @@ def generate(messages : str, max_tokens : int = 512): # 최대 토큰 수 512에
         input_ids,
         max_new_tokens=max_tokens,
         eos_token_id=tokenizer.eos_token_id,
-        do_sample=False,
-        temperature=None,
-        top_p=None,
+        do_sample=True,
+        temperature=0.01,
+        top_p=0.05,
         attention_mask=(input_ids != tokenizer.pad_token_id).long(),
     )
 
@@ -29,4 +29,8 @@ def generate(messages : str, max_tokens : int = 512): # 최대 토큰 수 512에
 
     parsed = json.loads(check_braces(response))
     
+    print("parsed 시작 ====================================================")
+    print(parsed)
+    print("parsed 끝 ====================================================")
+
     return parsed

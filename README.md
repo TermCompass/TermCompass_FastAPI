@@ -6,8 +6,7 @@ TermCompass AI모델 처리
 ─TermCompass_FastAPI
    ├─admin
    │  └─api_key
-   ├─Data
-   │  ├─Database
+   ├─test
    ├─module
    └─task
 ```
@@ -71,3 +70,17 @@ or
 }
 ```
 ---
+
+## 도커 배포
+
+
+```python
+# build
+docker buildx build --platform linux/amd64 -t [도커 계정]/fastapi:latest --load .
+
+# rum
+docker run -d -p 8000:8000 --name fastapi_container [도커 계정]/fastapi:latest
+
+# hub push
+docker push [도커 계정]/fastapi:latest
+```

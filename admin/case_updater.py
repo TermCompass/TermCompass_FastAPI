@@ -17,6 +17,7 @@ from sqlalchemy import create_engine, inspect
 # conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:3306/TermCompass')
 from module.global_var import conn
 
+
 # OpenAPI 클라이언트 설정
 import openai
 

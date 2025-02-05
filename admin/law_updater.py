@@ -13,25 +13,8 @@ import os
 
 ##### SQLAlchemy 엔진 생성
 from sqlalchemy import create_engine, inspect, text
+from module.global_var import conn2
 
-DB_USER = "termcompass"
-DB_PASSWORD = "termcompass"
-port = 9907
-DB_HOST = f"127.0.0.1:{port}"
-DB_NAME = "termcompass_law"
-
-# DB가 없을 경우 자동 생성
-engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
-with engine.connect() as conn:
-    conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {DB_NAME};"))
-
-try:
-    engine = create_engine(f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}")
-    print("MySQL 연결 성공!")
-except Exception as e:
-    print(f"MySQL 연결 실패: {e}")
-
-##########
 
 # OpenAPI 클라이언트 설정
 import openai
@@ -140,11 +123,11 @@ def call_list_law(law):
 def load_list_db(table_name = "list_law"):
 
     query = "SHOW TABLES;"
-    df = pd.read_sql(query, engine)
+    df = pd.read_sql(query, conn2)
 
     if len(df) != 0:
         query = f"SELECT * FROM `{table_name}`;"  # 테이블명에 한글, 숫자, 특수문자가 있으므로 백틱(`)으로 감싸야 함
-        df = pd.read_sql(query, engine)
+        df = pd.read_sql(query, conn2)
         return df
     
     else:
@@ -158,7 +141,7 @@ def load_list_db(table_name = "list_law"):
         empty_df = pd.DataFrame(columns=columns)
 
         # 빈 테이블 생성
-        empty_df.to_sql(table_name, engine, index=False, if_exists="fail")
+        empty_df.to_sql(table_name, conn2, index=False, if_exists="fail")
 
         # 테이블 형식이 지정된 빈 데이터프레임 반환
         return empty_df
@@ -262,7 +245,7 @@ def process_row_law(law, api_key = "eogus2469"):
 
         law_na = law_name.replace(' ', '_')
         
-        df.to_sql(f"{id}_{law_na}", engine, if_exists="replace", index=False)
+        df.to_sql(f"{id}_{law_na}", conn2, if_exists="replace", index=False)
         
     print("[process_row_law] 법령 DataBase 생성 완료!")
     # 함수 끝! return 없음!
@@ -306,7 +289,7 @@ def update_law():
             ids_list.append(id)
 
         # DB 연결 및 테이블 삭제
-        with engine.connect() as conn:
+        with conn2.connect() as conn:
             for law_id, law_name in zip(ids_list, name_list):
                 # 테이블 이름 생성
                 law_na = law_name.replace(' ', '_')
@@ -329,7 +312,7 @@ def update_law():
                 except Exception as e:
                     print(f"테이블 '{table_name}' 삭제 실패: {e}")
 
-        list_law2.to_sql("list_law_", engine, if_exists="replace", index=False)
+        list_law2.to_sql("list_law_", conn2, if_exists="replace", index=False)
         print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
 
     df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
@@ -340,7 +323,7 @@ def update_law():
         keyword_law(law=df_only_in_list_law2)
 
 
-        list_law2.to_sql("list_law_", engine, if_exists="replace", index=False)
+        list_law2.to_sql("list_law_", conn2, if_exists="replace", index=False)
         print(f"[update_law] {len(df_only_in_list_law2)}개의 법령 최신화 (생성)")
 
     if (len(df_only_in_list_law1) == 0) and (len(df_only_in_list_law2) == 0):
@@ -422,7 +405,7 @@ def keyword_law(law, api_key = "eogus2469"):
         
         law_na = law_name.replace(' ', '_')
         
-        merged_df.to_sql(f"{law_id}_keyword_{law_na}", engine, if_exists="replace", index=False)
+        merged_df.to_sql(f"{law_id}_keyword_{law_na}", conn2, if_exists="replace", index=False)
 
     print("[keyword_law] keyword 추출용 DataBase 생성 완료!")
     # return 없음! 
@@ -435,7 +418,7 @@ def init_setup():
     law = load_list_law_api()
     law = call_list_law(law=law)
     
-    law.to_sql("list_law_", engine, if_exists="replace", index=False)
+    law.to_sql("list_law_", conn2, if_exists="replace", index=False)
 
     process_row_law(law=law)
     keyword_law(law = law)

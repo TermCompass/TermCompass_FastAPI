@@ -273,5 +273,8 @@ async def update_case(websocket: WebSocket):
 
 
         
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000, ws_max_size=1024 * 1024 * 50)  # Increase to 50MB
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, ws_max_size=1024 * 1024 * 50)  # Increase to 50MB
+    uvicorn.run(app, host="127.0.0.1", port=8000, ws_max_size=1024 * 1024 * 50)  # Increase to 50MB

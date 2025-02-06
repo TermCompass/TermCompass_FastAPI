@@ -20,6 +20,7 @@ MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
 conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
 # from module.global_var import conn
 
+
 # OpenAPI 클라이언트 설정
 import openai
 

@@ -6,9 +6,7 @@ TermCompass AI모델 처리
 ─TermCompass_FastAPI
    ├─admin
    │  └─api_key
-   ├─Data
-   │  ├─Database
-   │  └─Dataframe ([임시]개발용)
+   ├─test
    ├─module
    └─task
 ```
@@ -72,6 +70,17 @@ or
 }
 ```
 ---
-법령목록 최신화 과정
-같은 법령이더라도 변경사항이 발생하는 경우, 법령일련번호가 다름.
-![법령목록_최신화](./image/법령목록_최신화.PNG)
+
+## 도커 배포
+
+
+```python
+# build
+docker buildx build --platform linux/amd64 -t [도커 계정]/fastapi:latest --load .
+
+# rum
+docker run -d -p 8000:8000 --name fastapi_container [도커 계정]/fastapi:latest
+
+# hub push
+docker push [도커 계정]/fastapi:latest
+```

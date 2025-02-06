@@ -1,5 +1,6 @@
 import base64
 from io import BytesIO
+import traceback
 import zlib
 import numpy as np
 import uvicorn
@@ -134,17 +135,31 @@ async def update_case(websocket: WebSocket):
                 # print('check6')
 
                 #=====================================================================================================
-                # 전체 통합 키워드목록
-                keyword_list = keyword_collector(textList)
+                # # 전체 통합 키워드목록
+                # keyword_list = keyword_collector(textList)
 
-                # 키워드로 참고자료 검색해 목록 작성
-                data_list = search_data(keyword_list)
+                # # 키워드로 참고자료 검색해 목록 작성
+                # data_list = search_data(keyword_list)
 
                 # 한 조항씩 검토 후 검토결과 송신
-                for index, text in enumerate(textList):
+                for index in range(1, len(textList) + 1):
 
-                    current_review = review(text,data_list)
+                    # 입력 조항의 전후 조항 합치기
+                    previous_text = textList[index - 2] if index - 2 >= 0 else ""
+                    current_text = textList[index - 1] if index - 1 < len(textList) else ""
+                    next_text = textList[index] if index < len(textList) else ""
+
+                    # 텍스트 조합
+                    combined_text = f"{previous_text} {current_text} {next_text}".strip()
+
+                    # DB 조회는 현재 조항으로만
+                    keyword_list = keyword_collector(current_text)
+                    data_list = search_data(keyword_list)
+
+                    # 조합된 조항으로 review
+                    current_review = review(combined_text,data_list)
                     # review_dict = json.loads(current_review)
+                    pprint(current_review)
 
                     await websocket.send_json({"type": "review","number": index, "content": current_review['review'], "grade": current_review['grade']})
                     await asyncio.sleep(0)  # Ensure the message is sent immediately
@@ -155,6 +170,7 @@ async def update_case(websocket: WebSocket):
         print(f"웹소켓 예외 발생 : {e}")
     except Exception as e:
         print(f"기타 예외 발생 : {e}")
+        traceback.print_exc()
 
     finally:
         # Ping task 종료
@@ -218,40 +234,41 @@ async def update_case(websocket: WebSocket):
     await websocket.accept()
 
     # 자동 ping 설정
-    ping_task = asyncio.create_task(ping_client(websocket))
+    # ping_task = asyncio.create_task(ping_client(websocket))
 
-    try:
-        while True:
-            data = await websocket.receive_text()
+    # try:
+    # while True:
+    data = await websocket.receive_text()
 
-            # 업데이트 요청
-            if data == "update":
-                await case_updater.update_case_law(websocket)
+    # 업데이트 요청
+    if data == "update":
+        await case_updater.init_setup(websocket)
+        await case_updater.update_case_law(websocket)
 
-            # 초기 세팅 요청
-            elif data == "init":
-                await case_updater.init_setup(websocket)
+    # 초기 세팅 요청
+    elif data == "init":
+        await case_updater.init_setup(websocket)
 
-            # 다른 입력 -> 종료
-            else:
-                await websocket.send_text("종료\n")
-                await websocket.close()
-                break
+    # 다른 입력 -> 종료
+    else:
+        await websocket.send_text("종료\n")
+        await websocket.close()
+            # break
 
-    except WebSocketDisconnect as e:
-        print(f"웹소켓 종료 사유 : {e.code}")
-    except WebSocketException as e:
-        print(f"웹소켓 예외 발생 : {e}")
-    except Exception as e:
-        print(f"기타 예외 발생 : {e}")
+    # except WebSocketDisconnect as e:
+    #     print(f"웹소켓 종료 사유 : {e.code}")
+    # except WebSocketException as e:
+    #     print(f"웹소켓 예외 발생 : {e}")
+    # except Exception as e:
+    #     print(f"기타 예외 발생 : {e}")
 
-    finally:
-        # Ping task 종료
-        ping_task.cancel()
-        try:
-            await ping_task  # ping_task가 정상적으로 종료될 때까지 기다림
-        except asyncio.exceptions.CancelledError:
-            pass  # 취소된 작업이므로 예외를 무시하고 처리
+    # finally:
+    #     # Ping task 종료
+    #     ping_task.cancel()
+    #     try:
+    #         await ping_task  # ping_task가 정상적으로 종료될 때까지 기다림
+    #     except asyncio.exceptions.CancelledError:
+    #         pass  # 취소된 작업이므로 예외를 무시하고 처리
 
 
 

@@ -10,9 +10,12 @@ import time
 import glob
 import os
 
+from sqlalchemy import create_engine
+
 # # SQLAlchemy 엔진 생성
-# from sqlalchemy import create_engine,inspect
-# conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:9906/termcompass')
+MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
+MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
+conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
 
 # OpenAPI 클라이언트 설정
 import openai
@@ -28,7 +31,7 @@ client = openai.OpenAI(
     )
 
 
-def load_list_law_api(api_key = 'eogus2469', PageNumber = 1, display = 100):
+def load_list_law_api(api_key = 'kyj9447', PageNumber = 1, display = 100):
     """
     현행법령 목록 조회하는 함수입니다.
     현행법령은 판례와 새로 생성되는 법령의 수가 많질 않습니다. 그래서 PageNumber을 1로 설정해도 충분할 것 같습니다.
@@ -93,7 +96,7 @@ def Filtering_list_law(sentences):
     return summary
 
 
-def call_list_law(law):
+def call_list_law(law : pd.DataFrame):
     """
     불러온 법령목록에서 법령이름(law['law_name'])을 활용하여, 해당 법령을 라벨링 및 ['약관', '개인정보', '공정거래', '전자상거래', '정보통신망]에 관련된 법령데이터 목록만 남김
     """
@@ -129,7 +132,7 @@ def call_list_law(law):
 #         print(f"[load_list_db] {table_name} 테이블이 존재하지 않습니다.")
 
 #         # 테이플 열 이름 참고를 위한 데이터 1개 불러오기
-#         df = load_list_law_api(api_key="eogus2469", PageNumbers=1, display=1)
+#         df = load_list_law_api(api_key="kyj9447", PageNumbers=1, display=1)
 #         columns = df.columns
 
 #         # 빈 데이터프레임 생성
@@ -142,7 +145,7 @@ def call_list_law(law):
 #         return empty_df
     
 
-def process_row_law(law, api_key = "eogus2469"):
+def process_row_law(law, api_key = "kyj9447"):
     """
     법령목록을 활용하여, 세부 법령 DataFrame을 생성하는 함수.
     """
@@ -308,7 +311,7 @@ def update_law():
     # return 없음!
 
 
-def keyword_law(law, api_key = "eogus2469"):
+def keyword_law(law, api_key = "kyj9447"):
     """
     법령일련번호를 활용하여 세부 법령내용을 키워드 추출용 DB형태로 만드는 함수.
     """
@@ -388,7 +391,8 @@ def keyword_law(law, api_key = "eogus2469"):
         
         law_na = law_name.replace(' ', '_')
         
-        merged_df.to_excel(f"./Data/Dataframe/{law_id}_keyword_{law_na}.xlsx", index=False)
+        # merged_df.to_excel(f"./Data/Dataframe/{law_id}_keyword_{law_na}.xlsx", index=False)
+        merged_df.to_sql("law", conn, if_exists="append", index=False) # 저장
 
         ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
         ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
@@ -403,13 +407,16 @@ def keyword_law(law, api_key = "eogus2469"):
 def init_setup():
     law = load_list_law_api()
     law = call_list_law(law=law)
-    law.to_excel("./Data/Dataframe/법령목록.xlsx", index=False)
+
+    # path = './Data/Dataframe/'
+    # os.makedirs(path, exist_ok=True)
+    # law.to_excel(f"{path}법령목록.xlsx", index=False)
 
     ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
     ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
     ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
 
-    process_row_law(law=law)
+    # process_row_law(law=law)
     keyword_law(law = law)
     
     # return 없음!
@@ -417,5 +424,5 @@ def init_setup():
 
 
 init_setup()
-update_law()
+# update_law()
 

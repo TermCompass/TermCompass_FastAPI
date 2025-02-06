@@ -10,12 +10,15 @@ import json
 import os
 
 # 웹소켓 send 함수
-from module.websocket_sender import ws_send
+# from module.websocket_sender import ws_send
 
 # SQLAlchemy 엔진 생성
 from sqlalchemy import create_engine, inspect
-# conn = create_engine('mysql+mysqlconnector://termcompass:termcompass@localhost:3306/TermCompass')
-from module.global_var import conn
+
+MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
+MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
+conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
+# from module.global_var import conn
 
 # OpenAPI 클라이언트 설정
 import openai
@@ -50,8 +53,68 @@ def llm_model_for_summarize_case_law(sentences):
                    "content":"""당신은 매우 철저하게 판례를 요약하는 조수입니다.
                    출력 형식
                    당신의 응답은 다음과 같은 정확한 구조를 따라야 합니다. 반드시 최종 답변을 포함하십시오.
-                   "(사건 배경) 원고가 항소를 하게된 배경에 대하여 문장으로 서술하시오. 글자 수는 300 ~ 500자 이내로 작성하시오.
-                   "(결론) 법원은 해당 사건에 대하여 어떻게 판결했는지를 문장으로 서술하시오. 글자 수는 300 ~500자 이내로 작성하시오."
+                   "(사건 배경) 원고가 항소를 하게된 배경에 대하여 문장으로 서술하시오. 글자 수는 100자 이내로 작성하시오.
+                   "(판결 요지) 법원은 해당 사건에 대하여 왜 판결했는지를 문장으로 서술하시오. 글자 수는 200자 이내로 작성하시오."
+                   """},
+                  {"role":"user","content":f"{sentences}"}],
+        temperature =  0.1,
+        top_p = 0.1
+    )
+    summary = response.choices[0].message.content
+    return summary
+
+# 개요 요약 함수
+def llm_model_for_summarize_case_law1(sentences):
+    """
+    판례내용을 언어모델로 요약하는 함수입니다.
+    판례요약은 Sambanova Cloud의 API 호출을 통해서, Llama-3.1-405B 모델을 불러옵니다.
+    사전에 작성된 프롬프트와 판례내용을 입력값으로 넣어서 구조화된 요약문을 얻을 수 있습니다.
+    """
+
+    if len(sentences) > 16000:
+            print(f"예외처리 : 판례의 길이가 Llama3.1-405B 모델의 입력 토큰 범위를 벗어났습니다.")
+            return "판례의 길이가 너무 깁니다."
+    if sentences == "판례내용이 없습니다.":
+            print(f"[summarize_case_law_detail] 예외처리 : 판례 내용이 없습니다.")
+            return "판례내용이 없습니다."        
+
+    response = client.chat.completions.create(
+        model='gpt-4o',
+        messages=[{"role":"system",
+                   "content":"""당신은 매우 철저하게 판례를 요약하는 조수입니다.
+                   출력 형식
+                   당신의 응답은 다음과 같은 정확한 구조를 따라야 합니다. 반드시 최종 답변을 포함하십시오.
+                   "(사건 배경) 재판의 배경에 대하여 문장으로 서술하시오. 글자 수는 100자 이내로 작성하시오.
+                   """},
+                  {"role":"user","content":f"{sentences}"}],
+        temperature =  0.1,
+        top_p = 0.1
+    )
+    summary = response.choices[0].message.content
+    return summary
+
+# 요지 요약 함수
+def llm_model_for_summarize_case_law2(sentences):
+    """
+    판례내용을 언어모델로 요약하는 함수입니다.
+    판례요약은 Sambanova Cloud의 API 호출을 통해서, Llama-3.1-405B 모델을 불러옵니다.
+    사전에 작성된 프롬프트와 판례내용을 입력값으로 넣어서 구조화된 요약문을 얻을 수 있습니다.
+    """
+
+    if len(sentences) > 16000:
+            print(f"예외처리 : 판례의 길이가 Llama3.1-405B 모델의 입력 토큰 범위를 벗어났습니다.")
+            return "판례의 길이가 너무 깁니다."
+    if sentences == "판례내용이 없습니다.":
+            print(f"[summarize_case_law_detail] 예외처리 : 판례 내용이 없습니다.")
+            return "판례내용이 없습니다."        
+
+    response = client.chat.completions.create(
+        model='gpt-4o',
+        messages=[{"role":"system",
+                   "content":"""당신은 매우 철저하게 판례를 요약하는 조수입니다.
+                   출력 형식
+                   당신의 응답은 다음과 같은 정확한 구조를 따라야 합니다. 반드시 최종 답변을 포함하십시오.
+                   "(판결 요지) 법원은 해당 사건에 대하여 왜 판결했는지를 문장으로 서술하시오. 글자 수는 200자 이내로 작성하시오."
                    """},
                   {"role":"user","content":f"{sentences}"}],
         temperature =  0.1,
@@ -193,7 +256,8 @@ def process_row(id):
         "court_name": root.findtext("법원명"),
         "case_type": root.findtext("사건종류명"),
         "judgment_type": root.findtext("판결유형"),
-        "summary": llm_model_for_summarize_case_law(root.findtext("판례내용")),
+        "summary": llm_model_for_summarize_case_law1(root.findtext("판례내용")),
+        "holding": llm_model_for_summarize_case_law2(root.findtext("판결요지")),
         # "path":  json_file_path,
     }
 
@@ -210,15 +274,18 @@ def process_row(id):
     # 디렉터리가 존재하지 않으면 생성
     os.makedirs(os.path.dirname(json_file_path), exist_ok=True)
 
-    # 판시사항, 판결요지, 판례내용 처리
-    for tag in ["판시사항", "판결요지", "판례내용"]:
-        text = root.findtext(tag)
-        if text:
-            # <br> 또는 <br/> 기준으로 분할 후 공백 제거
-            sentences = [s.strip() for s in re.split(r'<br\s*/?>', text) if s.strip()]
-            case_data[tag] = sentences[0]
-        else:
-            case_data[tag] = ""
+    # # 판시사항, 판결요지, 판례내용 처리
+    # for tag in ["판시사항", "판결요지", "판례내용"]:
+    #     text = root.findtext(tag)
+    #     if text:
+    #         # <br> 또는 <br/> 기준으로 분할 후 공백 제거
+    #         sentences = [s.strip() for s in re.split(r'<br\s*/?>', text) if s.strip()]
+    #         try:
+    #             case_data[tag] = sentences[0]
+    #         except:
+    #             case_data[tag] = ""
+    #     else:
+    #         case_data[tag] = ""
 
     # JSON 파일 저장
     with open(json_file_path, 'w', encoding='utf-8') as f:
@@ -232,10 +299,11 @@ def process_row(id):
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!파이프라인!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 # 초기 사전 세팅 / DB가 비어있는 상태에서 최초 1회만 실행 ( 1개 )
-async def init_setup(ws : WebSocket):
+def init_setup():
     
     text = "초기 세팅 실행...\n"
-    await ws_send(ws,text)
+    # await ws_send(ws,text)
+    print(text)
 
     df1 = load_list_api(api_key="kyj9447", PageNumbers=1, display=1)
     df1.to_sql("case_law", conn, if_exists="replace", index=False) # 저장
@@ -248,10 +316,11 @@ async def init_setup(ws : WebSocket):
 
     # 차집합 df에 for문 사용, summary_df 데이터프레임 생성
     summary_list = []
-    for target_row in df1.itertuples():
+    for index, target_row in enumerate(df1.itertuples()):
 
-        text = f"판례번호:, {target_row.case_id}, 사건명:, {target_row.case_name},  처리중... "
-        await ws_send(ws,text)
+        text = f"{index} 판례번호:, {target_row.case_id}, 사건명:, {target_row.case_name},  처리중... "
+        # await ws_send(ws,text)
+        print(text)
 
         summary_list.append(process_row(target_row.case_id))
 
@@ -259,15 +328,17 @@ async def init_setup(ws : WebSocket):
     summary_df.to_sql("case_law_summary", conn, if_exists="replace", index=False) # 저장
                 
     text = "초기 세팅 완료\n"
-    await ws_send(ws,text)
+    # await ws_send(ws,text)
+    print(text)
 
 # 최신 판례 업데이트
-async def update_case_law(ws : WebSocket):
+def update_case_law():
 
     text = "업데이트 실행...\n"
-    await ws_send(ws,text)
+    # await ws_send(ws,text)
+    print(text)
 
-    df1 = load_list_api(api_key="kyj9447", PageNumbers=1, display=10) # 최신 판례 로드 10개 (API)
+    df1 = load_list_api(api_key="kyj9447", PageNumbers=3, display=100) # 최신 판례 로드 10개 (API)
     df2 = load_list_db() # DB의 기존 판례 로드
 
     # 'case_id'을 기준으로 차집합 생성
@@ -276,7 +347,8 @@ async def update_case_law(ws : WebSocket):
     count = target_df.shape[0]
 
     text = f"{count}개의 신규 판례가 확인되었습니다."
-    await ws_send(ws,text)
+    # await ws_send(ws,text)
+    print(text)
 
     target_df.to_sql("case_law", conn, if_exists="append", index=False) # 저장
 
@@ -289,10 +361,11 @@ async def update_case_law(ws : WebSocket):
 
     # 차집합 df에 for문 사용, summary_df 데이터프레임 생성
     summary_list = []
-    for target_row in target_df.itertuples():
+    for index, target_row in enumerate(target_df.itertuples()):
 
-        text = f"판례번호:, {target_row.case_id}, 사건명:, {target_row.case_name}, 처리중... "
-        await ws_send(ws,text)
+        text = f"{index} 판례번호:, {target_row.case_id}, 사건명:, {target_row.case_name}, 처리중... "
+        # await ws_send(ws,text)
+        print(text)
 
         summary_list.append(process_row(target_row.case_id))
 
@@ -300,7 +373,8 @@ async def update_case_law(ws : WebSocket):
     summary_df.to_sql("case_law_summary", conn, if_exists="append", index=False) # 저장
 
     text = "업데이트 완료\n"
-    await ws_send(ws,text)
+    # await ws_send(ws,text)
+    print(text)
 
 # init_setup()
 # update_case_law()

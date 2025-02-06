@@ -29,38 +29,39 @@ def tasker(request: str):
         print(f"기타 예외 발생 : {e}")
         traceback.print_exc()
 
-# split된 약관 리스트 전체를 넣으면 모든 항에 대한 종합 키워드 목록 return
-def keyword_collector(input: list):
+# split된 약관 리스트 하나를 넣으면 키워드 목록 return
+def keyword_collector(input: str):
+
     try:
         keyword_list = []
-        for unit in input:
-            text = f"""
-            input에 대해 1단어 Keywords를 추출해주세요.
-            input = {unit}
-            """
+        text = f"""
+        input의 도메인에 대해 1단어 Keywords를 추출해주세요.
+        input = {input}
+        """
 
-            messages = [
-                {
-                    "role": "system",
-                    "content": "You are a terms and conditions writing assistant. You must respond in Korean language. You must respond in the following JSON format:\n{\n keywords : [질문의 핵심 키워드 목록 최대 3개] \n}"
-                },
-                {
-                    "role": "user", 
-                    "content": f"{text}"
-                },
-            ]
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a terms and conditions writing assistant. You must respond in Korean language. You must respond in the following JSON format:\n{\n keywords : [질문의 핵심 키워드 목록 3개] \n}"
+            },
+            {
+                "role": "user", 
+                "content": f"{text}"
+            },
+        ]
 
-            # 답변 생성
-            response : str = generate(messages, max_tokens=512)
+        # 답변 생성
+        response : str = generate(messages, max_tokens=512)
 
-            # 답변 형식 체크
-            if response and 'keywords' in response:
-                for keyword in response['keywords']:
-                    keyword_list.append(keyword)
+        # 답변 형식 체크
+        if response and 'keywords' in response:
+            for keyword in response['keywords']:
+                keyword_list.append(keyword)
         
         # 중복 제거
         keyword_list = list(set(keyword_list))
         return keyword_list
+    
     except Exception as e:
         print(f"기타 예외 발생 : {e}")
         traceback.print_exc()

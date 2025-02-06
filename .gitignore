@@ -8,3 +8,4 @@ temp/*
 원본/*
 result.csv
 admin/__pycache__/*
+module/term_spliter.old.py

@@ -27,9 +27,7 @@ def search_case(keywords: list):
         WHERE (
             cl.case_name LIKE :keyword OR
             cls.summary LIKE :keyword OR
-            cls.판시사항 LIKE :keyword OR
-            cls.판결요지 LIKE :keyword OR
-            cls.판례내용 LIKE :keyword
+            cls.holding LIKE :keyword
         )
     """)
 
@@ -43,13 +41,32 @@ def search_case(keywords: list):
             for row in rows:
                 print(row)
                 result.append(", ".join(row)) 
-    return result
+    return result[:5]
 
     
 # 법률 검색
 def search_law(keywords : list):
     result = []
-    return result
+    query = text("""
+        SELECT DISTINCT law_name, article_number, text
+        FROM law
+        WHERE (
+            article_number LIKE :keyword OR
+            text LIKE :keyword
+        )
+    """)
+
+    with conn.connect() as connection:
+        for keyword in keywords:
+            params = {"keyword": f"%{keyword}%"}
+            rows = connection.execute(query, params).fetchall()
+            print(f"======================== keyword : {keyword} =======================================")
+            
+            # 각 row를 문자열 1개로 변환하여 리스트에 추가
+            for row in rows:
+                print(row)
+                result.append(", ".join(row)) 
+    return result[:3]
 
 # 표준 검색
 def search_standard(keywords : list):

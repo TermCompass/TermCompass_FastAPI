@@ -2,6 +2,7 @@
 # 사용범위가 넓어 모듈로 분리함
 # 추후 상황에 따라 generator.py와 병합
 import json
+import re
 
 def check_braces(string : str):
     """

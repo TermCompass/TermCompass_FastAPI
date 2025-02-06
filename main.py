@@ -93,7 +93,7 @@ async def update_case(websocket: WebSocket):
                     await websocket.send_json({"type": "test","content": f"{content}!{content}!{content}!"})
                     print(f"응답 : {{type: test,content:{content}!{content}!{content}!}}")
                     await asyncio.sleep(3)  # 3초 대기
-                # await websocket.close()
+                await websocket.close()
             elif type == 'review':
 
                 # 내용물 확인
@@ -164,8 +164,14 @@ async def update_case(websocket: WebSocket):
                     await websocket.send_json({"type": "review","number": index, "content": current_review['review'], "grade": current_review['grade']})
                     await asyncio.sleep(0)  # Ensure the message is sent immediately
 
+                # 검토 완료시 Spring에게 end 신호 보내고 세션 종료
+                await websocket.send_json({"type": "end"})
+                await asyncio.sleep(0)
+                await websocket.close()
+                break
+
     except WebSocketDisconnect as e:
-        print(f"웹소켓 종료 사유 : {e.code}")
+        print(f"웹소켓 종료 사유 : {e}")
     except WebSocketException as e:
         print(f"웹소켓 예외 발생 : {e}")
     except Exception as e:

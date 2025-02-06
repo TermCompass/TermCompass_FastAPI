@@ -10,7 +10,7 @@ import time
 import glob
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 # # SQLAlchemy 엔진 생성
 MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
@@ -124,25 +124,25 @@ def call_list_law(law : pd.DataFrame):
 def load_list_db(table_name = "list_law"):
 
     query = "SHOW TABLES;"
-    df = pd.read_sql(query, conn2)
+    df = pd.read_sql(query, conn)
 
     if len(df) != 0:
         query = f"SELECT * FROM `{table_name}`;"  # 테이블명에 한글, 숫자, 특수문자가 있으므로 백틱(`)으로 감싸야 함
-        df = pd.read_sql(query, conn2)
+        df = pd.read_sql(query, conn)
         return df
     
     else:
         print(f"[load_list_db] {table_name} 테이블이 존재하지 않습니다.")
 
-#         # 테이플 열 이름 참고를 위한 데이터 1개 불러오기
-#         df = load_list_law_api(api_key="kyj9447", PageNumbers=1, display=1)
-#         columns = df.columns
+        # 테이플 열 이름 참고를 위한 데이터 1개 불러오기
+        df = load_list_law_api(api_key="kyj9447", PageNumbers=1, display=1)
+        columns = df.columns
 
         # 빈 데이터프레임 생성
         empty_df = pd.DataFrame(columns=columns)
 
         # 빈 테이블 생성
-        empty_df.to_sql(table_name, conn2, index=False, if_exists="fail")
+        empty_df.to_sql(table_name, conn, index=False, if_exists="fail")
 
         # 테이블 형식이 지정된 빈 데이터프레임 반환
         return empty_df
@@ -246,7 +246,7 @@ def process_row_law(law, api_key = "kyj9447"):
 
         law_na = law_name.replace(' ', '_')
         
-        df.to_sql(f"{id}_{law_na}", conn2, if_exists="replace", index=False)
+        df.to_sql(f"{id}_{law_na}", conn, if_exists="replace", index=False)
         
     print("[process_row_law] 법령 DataBase 생성 완료!")
     # 함수 끝! return 없음!
@@ -290,7 +290,7 @@ def update_law():
             ids_list.append(id)
 
         # DB 연결 및 테이블 삭제
-        with conn2.connect() as conn:
+        with conn.connect() as conn:
             for law_id, law_name in zip(ids_list, name_list):
                 # 테이블 이름 생성
                 law_na = law_name.replace(' ', '_')
@@ -313,7 +313,7 @@ def update_law():
                 except Exception as e:
                     print(f"테이블 '{table_name}' 삭제 실패: {e}")
 
-        list_law2.to_sql("list_law_", conn2, if_exists="replace", index=False)
+        list_law2.to_sql("list_law_", conn, if_exists="replace", index=False)
         print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
 
     df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
@@ -324,7 +324,7 @@ def update_law():
         keyword_law(law=df_only_in_list_law2)
 
 
-        list_law2.to_sql("list_law_", conn2, if_exists="replace", index=False)
+        list_law2.to_sql("list_law_", conn, if_exists="replace", index=False)
         print(f"[update_law] {len(df_only_in_list_law2)}개의 법령 최신화 (생성)")
 
     if (len(df_only_in_list_law1) == 0) and (len(df_only_in_list_law2) == 0):

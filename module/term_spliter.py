@@ -1,6 +1,5 @@
-import re
-
 import pandas as pd
+import re
 
 def split_terms_into_list(terms_text):
     # 1️⃣ 모든 줄바꿈 기호 정리
@@ -88,9 +87,8 @@ def split_list(text):  # 조항별로 조항번호, 서브번호, 조항명, lis
     special_symbols = ''.join([chr(9311 + i) for i in range(25)])  # ①(9312)부터 ㉕(9336)까지
     special_pattern = rf"(\s*[{special_symbols}])"  # 정규식 패턴 생성
     
-    # 1., 2.~n., A.~a.패턴을 저장
-    number_pattern = re.compile(r"(\s*\d+\.\s*|\s*[a-zA-Z]\.\s*)")
-
+    # 1.  2.  A.  b.  가.  나.  1)  2)  (1).  (2).  패턴을 저장
+    number_pattern = re.compile(r"(?P<index>\b\d+\.\s*|\b[a-zA-Z]\.\s*|\b[가-힣]\.\s*|\b\d+\)\s*|\(\d+\)\s*|\(\d+\)\.\s*|\b\d+\)\.\s*)")
     # "제n장 (제목)" 패턴 (제n장 ~ 제거)
     chapter_pattern = re.compile(r"제\d+장\s+[^\n]+")
 

@@ -10,3 +10,4 @@ result.csv
 admin/__pycache__/*
 module/term_spliter.old.py
 test/*
+.env

@@ -17,6 +17,10 @@ from sqlalchemy import create_engine, inspect
 
 MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
 MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
+
+LAW_OPEN_DATA_APIKEY = os.environ.get('LAW_OPEN_DATA_APIKEY') # 국가법령정보 공동활용 API 키 값
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
 conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
 # from module.global_var import conn
 
@@ -24,13 +28,17 @@ conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@
 # OpenAPI 클라이언트 설정
 import openai
 
-#파일의 apikey불러오기
-openai_api_key_path = "./admin/api_key/openai_api_key.txt"
-with open(openai_api_key_path, "r") as f:
-    openai_api_key = f.read()
+# #파일의 apikey불러오기
+# openai_api_key_path = "./admin/api_key/openai_api_key.txt"
+# with open(openai_api_key_path, "r") as f:
+#     openai_api_key = f.read()
+
+# client = openai.OpenAI(
+#         api_key=openai_api_key,
+#     )
 
 client = openai.OpenAI(
-        api_key=openai_api_key,
+        api_key=OPENAI_API_KEY,
     )
 
 # 요약 함수
@@ -125,7 +133,7 @@ def llm_model_for_summarize_case_law2(sentences):
     return summary
 
 # 판례 목록 불러오기 (API)
-def load_list_api(api_key = "kyj9447", PageNumbers = 3, display = 100):
+def load_list_api(api_key = LAW_OPEN_DATA_APIKEY, PageNumbers = 3, display = 100):
     """
     국가법령정보 공동활용 API(https://open.law.go.kr/LSO/openApi/guideResult.do)를 활용해서, 최신 판례들의 목록을 불러오는 함수입니다.
     판례목록을 불러올 때, 페이지(Page) 단위로 불러옵니다.
@@ -175,7 +183,7 @@ def load_list_db(table_name = "case_law"):
         print(f"[load_list_db] {table_name} 테이블이 존재하지 않습니다.")
 
         # 테이플 열 이름 참고를 위한 데이터 1개 불러오기
-        df = load_list_api(api_key="kyj9447", PageNumbers=1, display=1)
+        df = load_list_api(api_key=LAW_OPEN_DATA_APIKEY, PageNumbers=1, display=1)
         columns = df.columns
 
         # 빈 데이터프레임 생성
@@ -187,9 +195,9 @@ def load_list_db(table_name = "case_law"):
         # 테이블 형식이 지정된 빈 데이터프레임 반환
         return empty_df
 
-# df1 = load_list_api(api_key = "kyj9447", PageNumbers = 1)
+# df1 = load_list_api(api_key = LAW_OPEN_DATA_APIKEY, PageNumbers = 1)
 # df1.to_sql("case_law", conn, if_exists="replace", index=False)
-# df1 = load_list_api(api_key = "kyj9447", PageNumbers = 3)
+# df1 = load_list_api(api_key = LAW_OPEN_DATA_APIKEY, PageNumbers = 3)
 # df1
 
 # # 중복된 행 확인
@@ -202,7 +210,7 @@ def load_list_db(table_name = "case_law"):
 
 # 특정 판례번호의 판례내용 불러오기 (API)
 
-# def load_case_law_detail(api_key = "kyj9447", number=241977):
+# def load_case_law_detail(api_key = LAW_OPEN_DATA_APIKEY, number=241977):
 #     """
 #     판례 요약을 위해, 세부 판례본문에 대한 데이터 전처리를 수행하는 함수입니다.
 #     판례본문에서 <판례내용>의 내용과 길이를 추출 및 반환합니다.
@@ -224,7 +232,7 @@ def load_list_db(table_name = "case_law"):
 #         sentences = "판례내용이 없습니다."
 #     return sentences
 
-# sentences= load_case_law_detail(api_key = "kyj9447", number=241977)
+# sentences= load_case_law_detail(api_key = LAW_OPEN_DATA_APIKEY, number=241977)
 # print(sentences)
 
 # 특정 판례번호의 상세 내용을 받아 요약, JSON 저장(및 경로 기록)
@@ -233,7 +241,7 @@ def load_list_db(table_name = "case_law"):
 def process_row(id):
 
     # print("판례번호:", id, "처리중...")
-    url = f"http://www.law.go.kr/DRF/lawService.do?OC=kyj9447&target=prec&ID={id}"
+    url = f"http://www.law.go.kr/DRF/lawService.do?OC={LAW_OPEN_DATA_APIKEY}&target=prec&ID={id}"
 
     # response = requests.get(url)
 
@@ -306,7 +314,7 @@ def init_setup():
     # await ws_send(ws,text)
     print(text)
 
-    df1 = load_list_api(api_key="kyj9447", PageNumbers=1, display=1)
+    df1 = load_list_api(api_key=LAW_OPEN_DATA_APIKEY, PageNumbers=1, display=1)
     df1.to_sql("case_law", conn, if_exists="replace", index=False) # 저장
 
     # case_ids = df1["case_id"].tolist()
@@ -339,7 +347,7 @@ def update_case_law():
     # await ws_send(ws,text)
     print(text)
 
-    df1 = load_list_api(api_key="kyj9447", PageNumbers=3, display=100) # 최신 판례 로드 10개 (API)
+    df1 = load_list_api(api_key=LAW_OPEN_DATA_APIKEY, PageNumbers=3, display=100) # 최신 판례 로드 10개 (API)
     df2 = load_list_db() # DB의 기존 판례 로드
 
     # 'case_id'을 기준으로 차집합 생성

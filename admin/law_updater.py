@@ -10,28 +10,38 @@ import time
 import glob
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import text
+from module.global_var import conn
 
 # # SQLAlchemy 엔진 생성
-MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
-MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
-conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
+# MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
+# MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
+
+LAW_OPEN_DATA_APIKEY = os.environ.get('LAW_OPEN_DATA_APIKEY') # 국가법령정보 공동활용 API 키 값
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
+# from sqlalchemy import create_engine
+# conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
 
 # OpenAPI 클라이언트 설정
 import openai
 
 
-#파일의 apikey불러오기
-openai_api_key_path = "./admin/api_key/openai_api_key.txt"
-with open(openai_api_key_path, "r") as f:
-    openai_api_key = f.read()
+# #파일의 apikey불러오기
+# openai_api_key_path = "./admin/api_key/openai_api_key.txt"
+# with open(openai_api_key_path, "r") as f:
+#     openai_api_key = f.read()
+
+# client = openai.OpenAI(
+#         api_key=openai_api_key,
+#     )
 
 client = openai.OpenAI(
-        api_key=openai_api_key,
+        api_key=OPENAI_API_KEY,
     )
 
 
-def load_list_law_api(api_key = 'kyj9447', PageNumber = 1, display = 100):
+def load_list_law_api(api_key = LAW_OPEN_DATA_APIKEY, PageNumber = 1, display = 100):
     """
     현행법령 목록 조회하는 함수입니다.
     현행법령은 판례와 새로 생성되는 법령의 수가 많질 않습니다. 그래서 PageNumber을 1로 설정해도 충분할 것 같습니다.
@@ -124,31 +134,31 @@ def call_list_law(law : pd.DataFrame):
 def load_list_db(table_name = "list_law"):
 
     query = "SHOW TABLES;"
-    df = pd.read_sql(query, conn2)
+    df = pd.read_sql(query, conn)
 
     if len(df) != 0:
         query = f"SELECT * FROM `{table_name}`;"  # 테이블명에 한글, 숫자, 특수문자가 있으므로 백틱(`)으로 감싸야 함
-        df = pd.read_sql(query, conn2)
+        df = pd.read_sql(query, conn)
         return df
     
     else:
         print(f"[load_list_db] {table_name} 테이블이 존재하지 않습니다.")
 
 #         # 테이플 열 이름 참고를 위한 데이터 1개 불러오기
-#         df = load_list_law_api(api_key="kyj9447", PageNumbers=1, display=1)
+#         df = load_list_law_api(api_key=LAW_OPEN_DATA_APIKEY, PageNumbers=1, display=1)
 #         columns = df.columns
 
         # 빈 데이터프레임 생성
         empty_df = pd.DataFrame(columns=columns)
 
         # 빈 테이블 생성
-        empty_df.to_sql(table_name, conn2, index=False, if_exists="fail")
+        empty_df.to_sql(table_name, conn, index=False, if_exists="fail")
 
         # 테이블 형식이 지정된 빈 데이터프레임 반환
         return empty_df
     
 
-def process_row_law(law, api_key = "kyj9447"):
+def process_row_law(law, api_key = LAW_OPEN_DATA_APIKEY):
     """
     법령목록을 활용하여, 세부 법령 DataBase를 생성하는 함수.
     """
@@ -246,7 +256,7 @@ def process_row_law(law, api_key = "kyj9447"):
 
         law_na = law_name.replace(' ', '_')
         
-        df.to_sql(f"{id}_{law_na}", conn2, if_exists="replace", index=False)
+        df.to_sql(f"{id}_{law_na}", conn, if_exists="replace", index=False)
         
     print("[process_row_law] 법령 DataBase 생성 완료!")
     # 함수 끝! return 없음!
@@ -290,7 +300,7 @@ def update_law():
             ids_list.append(id)
 
         # DB 연결 및 테이블 삭제
-        with conn2.connect() as conn:
+        with conn.connect() as conn:
             for law_id, law_name in zip(ids_list, name_list):
                 # 테이블 이름 생성
                 law_na = law_name.replace(' ', '_')
@@ -313,7 +323,7 @@ def update_law():
                 except Exception as e:
                     print(f"테이블 '{table_name}' 삭제 실패: {e}")
 
-        list_law2.to_sql("list_law_", conn2, if_exists="replace", index=False)
+        list_law2.to_sql("list_law_", conn, if_exists="replace", index=False)
         print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
 
     df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
@@ -324,7 +334,7 @@ def update_law():
         keyword_law(law=df_only_in_list_law2)
 
 
-        list_law2.to_sql("list_law_", conn2, if_exists="replace", index=False)
+        list_law2.to_sql("list_law_", conn, if_exists="replace", index=False)
         print(f"[update_law] {len(df_only_in_list_law2)}개의 법령 최신화 (생성)")
 
     if (len(df_only_in_list_law1) == 0) and (len(df_only_in_list_law2) == 0):
@@ -332,7 +342,7 @@ def update_law():
     # return 없음!
 
 
-def keyword_law(law, api_key = "kyj9447"):
+def keyword_law(law, api_key = LAW_OPEN_DATA_APIKEY):
     """
     법령일련번호를 활용하여 세부 법령내용을 키워드 추출용 DB형태로 만드는 함수.
     """

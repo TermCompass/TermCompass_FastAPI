@@ -35,11 +35,11 @@ def search_case(keywords: list):
         for keyword in keywords:
             params = {"keyword": f"%{keyword}%"}
             rows = connection.execute(query, params).fetchall()
-            print(f"======================== keyword : {keyword} =======================================")
+            # print(f"======================== keyword : {keyword} =======================================")
             
             # 각 row를 문자열 1개로 변환하여 리스트에 추가
             for row in rows:
-                print(row)
+                # print(row)
                 result.append(", ".join(row)) 
     return result[:5]
 
@@ -60,11 +60,11 @@ def search_law(keywords : list):
         for keyword in keywords:
             params = {"keyword": f"%{keyword}%"}
             rows = connection.execute(query, params).fetchall()
-            print(f"======================== keyword : {keyword} =======================================")
+            # print(f"======================== keyword : {keyword} =======================================")
             
             # 각 row를 문자열 1개로 변환하여 리스트에 추가
             for row in rows:
-                print(row)
+                # print(row)
                 result.append(", ".join(row)) 
     return result[:3]
 

@@ -6,7 +6,7 @@ def review (input : str, data_list : list):
     input = input.replace('"', "'")
     input = input.replace('“', "'")
     input = input.replace('”', "'")
-    print(input)
+    # print(input)
     text = f"""
     1. input = {input}
     2. context = {data_list}

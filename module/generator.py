@@ -58,14 +58,14 @@ def generate(messages : str, max_tokens : int = 512): # 최대 토큰 수 512에
         data = re.sub(r"[\s*'", '["', data)
         data = re.sub(r"'\s*]", '"]', data)  
 
-        print("escaped_data 시작 ====================================================")
-        print(data)
-        print("escaped_data 끝 ====================================================")
+        # print("escaped_data 시작 ====================================================")
+        # print(data)
+        # print("escaped_data 끝 ====================================================")
         parsed = json.loads(data)
 
-        print("parsed 시작 ====================================================")
-        print(parsed)
-        print("parsed 끝 ====================================================")
+        # print("parsed 시작 ====================================================")
+        # print(parsed)
+        # print("parsed 끝 ====================================================")
 
         return parsed
 
@@ -84,9 +84,9 @@ def generate2(input: str, model: str = "gpt-4o") -> dict:
         response = client.chat.completions.create(model=model,
         messages=input)
 
-        print("response 시작 ====================================================")
-        print(response)
-        print("response 끝 ====================================================")        
+        # print("response 시작 ====================================================")
+        # print(response)
+        # print("response 끝 ====================================================")        
 
         content = response.choices[0].message.content
         # 코드 블록 제거

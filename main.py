@@ -67,7 +67,11 @@ async def review_file(file: UploadFile = File(...)):
     except Exception as e:
         return {"result": f"파일을 읽을 수 없습니다. {e}"}
 
-# 1-3. 웹소켓 테스트
+# 1-3. 웹소켓
+
+# # 중지 신호를 위한 Event 객체 생성
+# stop_event = asyncio.Event()
+
 @app.websocket("/ws")
 async def update_case(websocket: WebSocket): 
 
@@ -83,7 +87,7 @@ async def update_case(websocket: WebSocket):
             data = await websocket.receive_text()
             jsondata = json.loads(data)
             type = jsondata['type']
-
+            print('메세지 수신 : ',type)
             if type == 'test':
 
                 # 내용물 확인
@@ -95,6 +99,8 @@ async def update_case(websocket: WebSocket):
                     await asyncio.sleep(3)  # 3초 대기
                 await websocket.close()
             elif type == 'review':
+                # # 중지 신호 초기화
+                # stop_event.clear()
 
                 # 내용물 확인
                 content = jsondata['content']
@@ -124,7 +130,7 @@ async def update_case(websocket: WebSocket):
 
                 # List 보냄
                 textList = df['result'].to_list()
-                print('textList',textList)
+                # print('textList',textList)
 
                 length = len(textList)
                 # print('check5')
@@ -144,6 +150,12 @@ async def update_case(websocket: WebSocket):
                 # 한 조항씩 검토 후 검토결과 송신
                 for index in range(1, len(textList) + 1):
 
+                    # # 중지이벤트
+                    # if stop_event.is_set():
+                    #     # 중지됨 메세지 보내고 반복문 break
+                    #     await websocket.send_json({"type": "stopped"})
+                    #     break
+
                     # 입력 조항의 전후 조항 합치기
                     previous_text = textList[index - 2] if index - 2 >= 0 else ""
                     current_text = textList[index - 1] if index - 1 < len(textList) else ""
@@ -159,7 +171,7 @@ async def update_case(websocket: WebSocket):
                     # 조합된 조항으로 review
                     current_review = review(combined_text,data_list)
                     # review_dict = json.loads(current_review)
-                    pprint(current_review)
+                    # pprint(current_review)
 
                     await websocket.send_json({"type": "review","number": index, "content": current_review['review'], "grade": current_review['grade']})
                     await asyncio.sleep(0)  # Ensure the message is sent immediately
@@ -170,8 +182,13 @@ async def update_case(websocket: WebSocket):
                 await websocket.close()
                 break
 
+            # # 중지 이벤트 수신시
+            # elif type == 'stop':
+            #     # 중지 신호 설정
+            #     stop_event.set()
+
     except WebSocketDisconnect as e:
-        print(f"웹소켓 종료 사유 : {e}")
+        print(f"웹소켓 종료 사유 : {e.reason}")
     except WebSocketException as e:
         print(f"웹소켓 예외 발생 : {e}")
     except Exception as e:

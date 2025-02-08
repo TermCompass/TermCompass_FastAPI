@@ -71,9 +71,28 @@ or
 ```
 ---
 
-## 도커 배포
+## 환경 변수 설정
+![ia](./image/env_setting.jpg)
 
+```python
+# 설정할 환경 변수 목록
+# MySQL
+MYSQL_USERNAME 
+MYSQL_PASSWORD 
+MYSQL_HOST
+MYSQL_PORT
+MYSQL_DBNAME
 
+# 국가법령정보 공동활용 (https://open.law.go.kr/LSO/openApi/guideList.do#)
+LAW_OPEN_DATA_APIKEY 
+
+# OpenAI 
+OPENAI_API_KEY 
+```
+
+---
+
+## 도커 배포 (로컬)
 ```python
 # build
 docker buildx build --platform linux/amd64 -t [도커 계정]/fastapi:latest --load .

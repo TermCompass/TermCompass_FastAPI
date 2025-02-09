@@ -91,7 +91,14 @@ OPENAI_API_KEY
 ```
 
 ---
+## 가상환경 생성 및 설치
+```python
+conda create --name FastAPI python=3.12.8
 
+conda activate FastAPI
+
+pip install -r requirements.txt
+```
 ## 도커 배포 (로컬)
 ```python
 # build
@@ -100,6 +107,10 @@ docker buildx build --platform linux/amd64 -t [도커 계정]/fastapi:latest --l
 # rum
 docker run -d -p 8000:8000 --name fastapi_container [도커 계정]/fastapi:latest
 
+```
+
+## 도커 배포 (클라우드)
+``` python
 # hub push
 docker push [도커 계정]/fastapi:latest
 ```

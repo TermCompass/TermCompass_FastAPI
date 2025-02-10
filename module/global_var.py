@@ -23,3 +23,6 @@ MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', 'termcompass')
 
 conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{DB1_HOST}:3306/TermCompass')
 conn2 = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{DB2_HOST}:3307/termcompass_law')
+
+# OpenAI API Key
+OPENAI_KEY = os.environ.get('OPENAI_KEY')

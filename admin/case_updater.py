@@ -15,6 +15,8 @@ import os
 # SQLAlchemy 엔진 생성
 from sqlalchemy import create_engine, inspect
 
+from module.global_var import OPENAI_KEY
+
 MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
 MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
 conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
@@ -30,7 +32,7 @@ with open(openai_api_key_path, "r") as f:
     openai_api_key = f.read()
 
 client = openai.OpenAI(
-        api_key=openai_api_key,
+        api_key=OPENAI_KEY,
     )
 
 # 요약 함수

@@ -12,6 +12,8 @@ import os
 
 from sqlalchemy import create_engine, text
 
+from module.global_var import OPENAI_KEY
+
 # # SQLAlchemy 엔진 생성
 MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
 MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
@@ -27,7 +29,7 @@ with open(openai_api_key_path, "r") as f:
     openai_api_key = f.read()
 
 client = openai.OpenAI(
-        api_key=openai_api_key,
+        api_key=OPENAI_KEY,
     )
 
 

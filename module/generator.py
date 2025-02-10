@@ -5,16 +5,16 @@ import re
 
 from openai import OpenAI
 
-from module.global_var import model, tokenizer
+from module.global_var import OPENAI_KEY, model, tokenizer
 from module.brace_checker import check_braces
 
-#파일의 apikey불러오기
-openai_api_key_path = "./admin/api_key/openai_api_key.txt"
-with open(openai_api_key_path, "r") as f:
-    openai_api_key = f.read()
+# #파일의 apikey불러오기
+# openai_api_key_path = "./admin/api_key/openai_api_key.txt"
+# with open(openai_api_key_path, "r") as f:
+#     openai_api_key = f.read()
 
 client = OpenAI(
-        api_key=openai_api_key,
+        api_key=OPENAI_KEY,
     )
 
 def generate(messages : str, max_tokens : int = 512): # 최대 토큰 수 512에서 조절 가능

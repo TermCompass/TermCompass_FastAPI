@@ -11,11 +11,6 @@ import torch
 from transformers import LlamaForCausalLM , PreTrainedTokenizerFast
 import json
 
-from admin.standard_updater import extract_and_process_pdfs
-from module.decompress import decompress_data
-from module.term_spliter import Text_Pipline
-from module.text2formatted import process_and_refine_text
-from module.websocket_sender import ping_client
 app = FastAPI()
 
 # 0-1. 모델 로드 ------------------------------------------------------------------------------------
@@ -48,6 +43,11 @@ from task.review import review
 from task.generate import generate
 from task.modify import modify
 from task.chat import chat
+from module.decompress import decompress_data
+from module.term_spliter import Text_Pipline
+from module.text2formatted import process_and_refine_text
+from module.websocket_sender import ping_client
+from admin.standard_updater import extract_and_process_pdfs
 
 # 1. 검토 (텍스트 or 파일 -> 검토 결과 List) ------------------------------------------------------
 
@@ -107,7 +107,9 @@ async def update_case(websocket: WebSocket):
                 # print('check1')
                 # 메타데이터 준비
                 file_name = jsondata["fileName"]
+                print('file_name : ',file_name)
                 file_type = jsondata["fileType"]
+                print('file_type : ',file_type)
 
                 # 내용 압축 해제
                 compressed_content = jsondata["content"]
@@ -119,7 +121,7 @@ async def update_case(websocket: WebSocket):
                 # print('check3')
 
                 # file2text 파이프라인
-                text = await file2text(upload_file)
+                text = await file2text(upload_file, file_type)
                 # print('check4')
 
                 # 조항 split 파이프라인

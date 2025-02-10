@@ -17,7 +17,7 @@ try:
         for table in tables:
             print(f" - {table}")
 
-        table_name = "keyword_law"
+        table_name = "law"
 
         if table_name in tables:
             result = conn.execute(text(f"DESCRIBE {table_name}"))

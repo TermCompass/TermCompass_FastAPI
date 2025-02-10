@@ -158,7 +158,7 @@ def load_list_db(table_name = "list_law"):
         return empty_df
     
 
-def process_row_law(law, api_key = LAW_OPEN_DATA_APIKEY):
+def process_row_law(law, api_key = LAW_OPEN_DATA_APIKEY, if_exists="replace"):
     """
     법령목록을 활용하여, 세부 법령 DataBase를 생성하는 함수.
     """
@@ -256,7 +256,7 @@ def process_row_law(law, api_key = LAW_OPEN_DATA_APIKEY):
 
         law_na = law_name.replace(' ', '_')
         
-        df.to_sql(f"law", conn, if_exists="replace", index=False)
+        df.to_sql(f"law", conn, if_exists= if_exists, index=False)
         
     print("[process_row_law] 법령 DataBase 생성 완료!")
     # 함수 끝! return 없음!
@@ -275,124 +275,57 @@ def update_law():
     ### 법령목록 최신화 함수
     # 법령목록 DB를 가져오기
     list_law1 = load_list_db(table_name='list_law')
-    
-    list_law1['law_id'] = list_law1['law_id'].astype(str)
 
     # 최신 법령 목록 가져오기(API 호출)
     list_law2 = load_list_law_api()
     list_law2 = call_list_law(law=list_law2)
-
-    # ##### 두 DataFrame을 비교하기 (데이터 처리)
-    # # - 기존 법령목록 DB에도 있고, 최신 법령 목록에도 있는 법령 -> 유지
-    # # None
-
-    # # - 기존 법령목록 DB에 있지만, 최신 법령 목록에는 없는 법령 -> 삭제
-    # df_only_in_list_law1 = list_law1[~list_law1['law_id'].isin(list_law2['law_id'])]
-    # if len(df_only_in_list_law1) != 0:
-    #     print(df_only_in_list_law1)
-        
-    #     name_list = []
-    #     for name in df_only_in_list_law1['law_name']:
-    #         name_list.append(name)
-
-    #     ids_list = []
-    #     for id in df_only_in_list_law1['law_id']:
-    #         ids_list.append(id)
-
-    #     # DB 연결 및 테이블 삭제
-    #     for law_id, law_name in zip(ids_list, name_list):
-    #         # 테이블 이름 생성
-    #         law_na = law_name.replace(' ', '_')
-    #         key_table_name = f"{law_id}_{law_na}"
-    #         table_name = f""
-
-    #         # key_table_name 삭제 시도
-    #         try:
-    #             drop_query = text(f"DROP TABLE IF EXISTS `{key_table_name}`;")
-    #             conn.execute(drop_query)
-    #             print(f"테이블 '{key_table_name}' 삭제 완료.")
-    #         except Exception as e:
-    #             print(f"테이블 '{key_table_name}' 삭제 실패: {e}")
-
-    #         # table_name 삭제 시도
-    #         try:
-    #             drop_query = text(f"DROP TABLE IF EXISTS `{table_name}`;")
-    #             conn.execute(drop_query)
-    #             print(f"테이블 '{table_name}' 삭제 완료.")
-    #         except Exception as e:
-    #             print(f"테이블 '{table_name}' 삭제 실패: {e}")
-
-    # list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
-    # print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
-
-    # df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
-    # if len(df_only_in_list_law2) != 0:
-    #     # keyword 추출용 DB 생성, AI 모델 학습용 DB 생성
-    #     # 해당 DB 생성하는 코드 작성 필요!
-    #     process_row_law(law=df_only_in_list_law2)
-    #     keyword_law(law=df_only_in_list_law2)
-
-
-    #     list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
-    #     print(f"[update_law] {len(df_only_in_list_law2)}개의 법령 최신화 (생성)")
-
-    # if (len(df_only_in_list_law1) == 0) and (len(df_only_in_list_law2) == 0):
-    #     print("[update_law] 현재 법령목록이 최신 상태입니다!")
-    # # return 없음!
     
-    # - 기존 법령목록 DB에 있지만, 최신 법령 목록에는 없는 법령 -> 삭제
-    df_only_in_list_law1 = list_law1[~list_law1['law_id'].isin(list_law2['law_id'])]
-    if len(df_only_in_list_law1) != 0:
-        print(df_only_in_list_law1)
-        
-        name_list = []
-        for name in df_only_in_list_law1['law_name']:
-            name_list.append(name)
+    # 데이터 타입 통일
+    list_law1['law_id'] = list_law1['law_id'].astype(str)
+    list_law2['law_id'] = list_law2['law_id'].astype(str)
+    
+    # 1) 새로 추가되어야 하는 law_id (list_law1에는 없고 list_law2에만 있는 경우)
+    new_law_ids = set(list_law2['law_id']) - set(list_law1['law_id'])
+    df_new = list_law2[list_law2['law_id'].isin(new_law_ids)]
 
+    # 2) 삭제되어야 하는 law_id (list_law1에는 있지만 list_law2에는 없는 경우)
+    removed_law_ids = set(list_law1['law_id']) - set(list_law2['law_id'])
+    df_removed = list_law1[list_law1['law_id'].isin(removed_law_ids)]
 
-            
+    # -------------------------------
+    # 새로 생긴 법령(law_id) DB에 추가
+    # -------------------------------
+    if not df_new.empty:
+        for idx, row in df_new.iterrows():
+            process_row_law(law=row, if_exists= "append")
+            keyword_law(law = row)
 
-        # DB 연결 및 테이블 삭제
-        for law_id, law_name in zip(ids_list, name_list):
-            # 테이블 이름 생성
-            law_na = law_name.replace(' ', '_')
-            key_table_name = f"{law_id}_{law_na}"
-            table_name = f""
+            print(f"[추가] law_id={row['law_id']}, law_name={row.get('law_name', 'N/A')}")
 
-            # key_table_name 삭제 시도
+    # -------------------------------
+    # 사라진 법령(law_id) DB에서 삭제
+    # -------------------------------
+    query_law = "SELECT * FROM law;"
+    df_law = pd.read_sql(query_law, conn)
+    query_law = "SELECT * FROM keyword_law;"
+    df_keyword_law = pd.read_sql(query_law, conn)
+    
+    if not df_removed.empty:
+        for idx, row in df_removed.iterrows():
             try:
-                drop_query = text(f"DROP TABLE IF EXISTS `{key_table_name}`;")
-                conn.execute(drop_query)
-                print(f"테이블 '{key_table_name}' 삭제 완료.")
-            except Exception as e:
-                print(f"테이블 '{key_table_name}' 삭제 실패: {e}")
+                df_law = df_law[df_law['law_id'] != row['law_id']]
+                df_keyword_law = df_keyword_law[df_keyword_law['law_id'] != row['law_id']]
 
-            # table_name 삭제 시도
-            try:
-                drop_query = text(f"DROP TABLE IF EXISTS `{table_name}`;")
-                conn.execute(drop_query)
-                print(f"테이블 '{table_name}' 삭제 완료.")
             except Exception as e:
-                print(f"테이블 '{table_name}' 삭제 실패: {e}")
+                print(f"[오류] 데이터 삭제 중 예외가 발생했습니다: {e}")
+        df_law.to_sql("law", conn, if_exists="replace", index=False)
+        df_keyword_law.to_sql("law", conn, if_exists="replace", index=False)
 
+    if (df_new.empty == True) and (df_removed.empty == True):
+        print("법령 데이터가 현재 최신상태입니다.")
     list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
-    print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
-
-    df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
-    if len(df_only_in_list_law2) != 0:
-        # keyword 추출용 DB 생성, AI 모델 학습용 DB 생성
-        # 해당 DB 생성하는 코드 작성 필요!
-        process_row_law(law=df_only_in_list_law2)
-        keyword_law(law=df_only_in_list_law2)
-
-
-        list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
-        print(f"[update_law] {len(df_only_in_list_law2)}개의 법령 최신화 (생성)")
-
-    if (len(df_only_in_list_law1) == 0) and (len(df_only_in_list_law2) == 0):
-        print("[update_law] 현재 법령목록이 최신 상태입니다!")
+    
     # return 없음!
-
 
 def keyword_law(law, api_key = LAW_OPEN_DATA_APIKEY):
     """
@@ -412,9 +345,6 @@ def keyword_law(law, api_key = LAW_OPEN_DATA_APIKEY):
         name = root.findtext(".//소관부처명")
         publication_date = root.findtext(".//공포일자")
         effective_date = root.findtext(".//시행일자")
-    
-        # df2_data = {"law_id": [f"{law_id}"], "law_name": [f"{law_name}"], "name": [f"{name}"], "publication_date": [f"{publication_date}"], "effective_date": [f"{effective_date}"]}
-        # df2 = pd.DataFrame(df2_data).iloc[0].to_frame().T
 
         df2_data = {"law_id": [f"{law_id}"], "law_name": [f"{law_name}"], "name": [f"{name}"], "publication_date": [f"{publication_date}"], "effective_date": [f"{effective_date}"]}
         df2 = pd.DataFrame(df2_data).iloc[0].to_frame().T
@@ -430,14 +360,11 @@ def keyword_law(law, api_key = LAW_OPEN_DATA_APIKEY):
             
             para_elems = article_elem.findall('.//항')
             if not para_elems:
-                # 항이 없으면 조문내용만 '내용'으로 처리하거나 생략
                 continue
             
             for para_elem in para_elems:
                 para_no = para_elem.findtext('항번호', default='').strip()
                 para_content = para_elem.findtext('항내용', default='').strip()
-                
-                # 항 내용을 먼저 한 행에 담는다
                 rows.append({
                     '조항번호': clause_label,
                     '항': para_no,
@@ -471,7 +398,6 @@ def keyword_law(law, api_key = LAW_OPEN_DATA_APIKEY):
         
         law_na = law_name.replace(' ', '_')
         
-        # merged_df.to_excel(f"./Data/Dataframe/{law_id}_keyword_{law_na}.xlsx", index=False)
         merged_df.to_sql("keyword_law", conn, if_exists="append", index=False) # 저장
 
     print("[keyword_law] keyword 추출용 DataBase 생성 완료!")
@@ -484,15 +410,7 @@ def keyword_law(law, api_key = LAW_OPEN_DATA_APIKEY):
 def init_setup():
     law = load_list_law_api()
     law = call_list_law(law=law)
-
-    # path = './Data/Dataframe/'
-    # os.makedirs(path, exist_ok=True)
-    # law.to_excel(f"{path}법령목록.xlsx", index=False)
-
-    ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
-    ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
-    ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
-
+    law.to_sql("list_law", conn, if_exists="append", index=False)
     process_row_law(law=law)
     keyword_law(law = law)
     

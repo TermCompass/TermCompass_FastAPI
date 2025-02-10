@@ -15,14 +15,7 @@ import os
 # SQLAlchemy 엔진 생성
 from sqlalchemy import create_engine, inspect
 
-from module.global_var import OPENAI_KEY
-from module.global_var import OPEN_LAW
-
-MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
-MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
-conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
-# from module.global_var import conn
-
+from module.global_var import conn, OPENAI_KEY, OPEN_LAW
 
 # OpenAPI 클라이언트 설정
 import openai
@@ -236,7 +229,7 @@ def load_list_db(table_name = "case_law"):
 def process_row(id):
 
     # print("판례번호:", id, "처리중...")
-    url = f"http://www.law.go.kr/DRF/lawService.do?OC=kyj9447&target=prec&ID={id}"
+    url = f"http://www.law.go.kr/DRF/lawService.do?OC={OPEN_LAW}&target=prec&ID={id}"
 
     # response = requests.get(url)
 

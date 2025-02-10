@@ -12,13 +12,7 @@ import os
 
 from sqlalchemy import create_engine, text
 
-from module.global_var import OPENAI_KEY
-from module.global_var import OPEN_LAW
-
-# # SQLAlchemy 엔진 생성
-MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
-MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
-conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
+from module.global_var import conn, OPENAI_KEY, OPEN_LAW
 
 # OpenAPI 클라이언트 설정
 import openai
@@ -34,7 +28,7 @@ client = openai.OpenAI(
     )
 
 
-def load_list_law_api(api_key = 'kyj9447', PageNumber = 1, display = 100):
+def load_list_law_api(api_key = OPEN_LAW , PageNumber = 1, display = 100):
     """
     현행법령 목록 조회하는 함수입니다.
     현행법령은 판례와 새로 생성되는 법령의 수가 많질 않습니다. 그래서 PageNumber을 1로 설정해도 충분할 것 같습니다.

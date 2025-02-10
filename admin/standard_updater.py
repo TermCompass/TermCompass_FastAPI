@@ -4,14 +4,12 @@ import re
 from fastapi import UploadFile
 import pandas as pd
 from sqlalchemy import create_engine, types
-from module.file2text import file2text
-from module.text2formatted import process_and_refine_text
 from fastapi.datastructures import UploadFile
 from starlette.datastructures import Headers as Headers  # noqa: F401
 
-MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
-MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
-conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
+from module.file2text import file2text
+from module.text2formatted import process_and_refine_text
+from module.global_var import conn
 
 async def extract_and_process_pdfs(folder_path: str):
     """

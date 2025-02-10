@@ -16,6 +16,7 @@ from module.decompress import decompress_data
 from module.term_spliter import Text_Pipline
 from module.websocket_sender import ping_client, ws_send
 
+
 app = FastAPI()
 
 # 0-1. 모델 로드 ------------------------------------------------------------------------------------
@@ -48,6 +49,13 @@ from task.review import review
 from task.generate import generate
 from task.modify import modify
 from task.chat import chat
+
+
+# admin
+from admin import law_updater
+# from admin import case_updater
+
+# -------
 
 # 1. 검토 (텍스트 or 파일 -> 검토 결과 List) ------------------------------------------------------
 
@@ -270,8 +278,14 @@ async def update_case(websocket: WebSocket):
     #     except asyncio.exceptions.CancelledError:
     #         pass  # 취소된 작업이므로 예외를 무시하고 처리
 
+@app.get("/law_setting")
+def law_setting():
+    law_updater.init_setup()
 
 
+@app.get("/law_update")
+def law_update():
+    law_updater.update_law()
         
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="0.0.0.0", port=8000, ws_max_size=1024 * 1024 * 50)  # Increase to 50MB

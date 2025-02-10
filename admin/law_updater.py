@@ -17,7 +17,7 @@ from module.global_var import conn
 # MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
 # MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
 
-LAW_OPEN_DATA_APIKEY = os.environ.get('LAW_OPEN_DATA_APIKEY') # 국가법령정보 공동활용 API 키 값
+LAW_OPEN_DATA_APIKEY = os.environ.get('LAW_OPEN_DATA_APIKEY', 'eogus2469') # 국가법령정보 공동활용 API 키 값
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
 # from sqlalchemy import create_engine
@@ -256,7 +256,7 @@ def process_row_law(law, api_key = LAW_OPEN_DATA_APIKEY):
 
         law_na = law_name.replace(' ', '_')
         
-        df.to_sql(f"{id}_{law_na}", conn, if_exists="replace", index=False)
+        df.to_sql(f"law", conn, if_exists="replace", index=False)
         
     print("[process_row_law] 법령 DataBase 생성 완료!")
     # 함수 끝! return 없음!
@@ -274,7 +274,7 @@ def update_law():
     """
     ### 법령목록 최신화 함수
     # 법령목록 DB를 가져오기
-    list_law1 = load_list_db(table_name='list_law_')
+    list_law1 = load_list_db(table_name='list_law')
     
     list_law1['law_id'] = list_law1['law_id'].astype(str)
 
@@ -305,7 +305,7 @@ def update_law():
                 # 테이블 이름 생성
                 law_na = law_name.replace(' ', '_')
                 key_table_name = f"{law_id}_{law_na}"
-                table_name = f"{law_id}_keyword_{law_na}"
+                table_name = f""
 
                 # key_table_name 삭제 시도
                 try:
@@ -323,7 +323,7 @@ def update_law():
                 except Exception as e:
                     print(f"테이블 '{table_name}' 삭제 실패: {e}")
 
-        list_law2.to_sql("list_law_", conn, if_exists="replace", index=False)
+        list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
         print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
 
     df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
@@ -334,7 +334,7 @@ def update_law():
         keyword_law(law=df_only_in_list_law2)
 
 
-        list_law2.to_sql("list_law_", conn, if_exists="replace", index=False)
+        list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
         print(f"[update_law] {len(df_only_in_list_law2)}개의 법령 최신화 (생성)")
 
     if (len(df_only_in_list_law1) == 0) and (len(df_only_in_list_law2) == 0):
@@ -361,9 +361,12 @@ def keyword_law(law, api_key = LAW_OPEN_DATA_APIKEY):
         publication_date = root.findtext(".//공포일자")
         effective_date = root.findtext(".//시행일자")
     
+        # df2_data = {"law_id": [f"{law_id}"], "law_name": [f"{law_name}"], "name": [f"{name}"], "publication_date": [f"{publication_date}"], "effective_date": [f"{effective_date}"]}
+        # df2 = pd.DataFrame(df2_data).iloc[0].to_frame().T
+
         df2_data = {"law_id": [f"{law_id}"], "law_name": [f"{law_name}"], "name": [f"{name}"], "publication_date": [f"{publication_date}"], "effective_date": [f"{effective_date}"]}
         df2 = pd.DataFrame(df2_data).iloc[0].to_frame().T
-    
+        
         root = ET.fromstring(xml_str)
         
         rows = []
@@ -417,7 +420,7 @@ def keyword_law(law, api_key = LAW_OPEN_DATA_APIKEY):
         law_na = law_name.replace(' ', '_')
         
         # merged_df.to_excel(f"./Data/Dataframe/{law_id}_keyword_{law_na}.xlsx", index=False)
-        merged_df.to_sql("law", conn, if_exists="append", index=False) # 저장
+        merged_df.to_sql("keyword_law", conn, if_exists="append", index=False) # 저장
 
     print("[keyword_law] keyword 추출용 DataBase 생성 완료!")
     # return 없음! 
@@ -438,13 +441,13 @@ def init_setup():
     ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
     ##### DataFrame -> DataBase형태로 변환하는 코드 필요! #####
 
-    # process_row_law(law=law)
+    process_row_law(law=law)
     keyword_law(law = law)
     
     # return 없음!
 
 
 
-init_setup()
+# init_setup()
 # update_law()
 

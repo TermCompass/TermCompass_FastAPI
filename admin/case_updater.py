@@ -10,7 +10,7 @@ import json
 import os
 
 # 웹소켓 send 함수
-# from module.websocket_sender import ws_send
+from module.websocket_sender import ws_send
 
 # SQLAlchemy 엔진 생성
 from sqlalchemy import create_engine, inspect

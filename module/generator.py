@@ -81,14 +81,22 @@ def generate2(input: str, model: str = "gpt-4o") -> dict:
     - dict: JSON 응답 데이터를 파싱한 딕셔너리
     """
     try:
-        response = client.chat.completions.create(model=model,
-        messages=input)
+        response = client.chat.completions.create(
+        model=model,
+        temperature=0,
+        messages=input
+        )
 
         # print("response 시작 ====================================================")
         # print(response)
         # print("response 끝 ====================================================")        
 
         content = response.choices[0].message.content
+
+        print("content 시작 ====================================================")
+        print(content)
+        print("content 끝 ====================================================")        
+
         # 코드 블록 제거
         clean_content = content.strip('```json').strip('```').strip()
         # OpenAI 응답을 JSON 문자열로 변환 후 로드

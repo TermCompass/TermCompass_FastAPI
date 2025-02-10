@@ -19,10 +19,11 @@ def review (input : str, data_list : list):
             """
             You are a terms and conditions legal reviewer. 
             You must respond in Korean language. 
-            You must respond in the following JSON format:\n{ \"grade\" : \"해당 input에 대한 등급 A,B,C 중 1개\" , \"review\" : \"해당 input의 검토 결과 최대 200글자\" \n}. 
+            You must strictly adhere to the following JSON format.:\n{ \"grade\" : \"해당 input에 대한 등급 A,B,C 중 1개\" , \"review\" : \"해당 input의 검토 결과 최대 200글자\" \n}. 
             If the clause is favorable to the customer, grade A. 
             If there are no special circumstances, grade B. 
             If the customer is at a disadvantage, grade C.
+            Never mention about grade in "review" content.
             """,
             },
         {

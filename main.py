@@ -1,7 +1,6 @@
-import base64
 from io import BytesIO
+import re
 import traceback
-import zlib
 import numpy as np
 import uvicorn
 import asyncio
@@ -12,10 +11,11 @@ import torch
 from transformers import LlamaForCausalLM , PreTrainedTokenizerFast
 import json
 
+from admin.standard_updater import extract_and_process_pdfs
 from module.decompress import decompress_data
 from module.term_spliter import Text_Pipline
-from module.websocket_sender import ping_client, ws_send
-
+from module.text2formatted import process_and_refine_text
+from module.websocket_sender import ping_client
 app = FastAPI()
 
 # 0-1. 모델 로드 ------------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ def review_text(data: str):
 async def review_file(file: UploadFile = File(...)):
     try:
         text = await file2text(file)
-        return { "result": review(text) }
+        return { "result": text }
     except TypeError as e:
         return {"result": e}
     except Exception as e:
@@ -188,7 +188,7 @@ async def update_case(websocket: WebSocket):
             #     stop_event.set()
 
     except WebSocketDisconnect as e:
-        print(f"웹소켓 종료 사유 : {e.reason}")
+        print(f"웹소켓 종료 사유 : {str(e)}")
     except WebSocketException as e:
         print(f"웹소켓 예외 발생 : {e}")
     except Exception as e:
@@ -293,9 +293,30 @@ async def update_case(websocket: WebSocket):
     #     except asyncio.exceptions.CancelledError:
     #         pass  # 취소된 작업이므로 예외를 무시하고 처리
 
+# PDF -> HTML 1회 테스트
+@app.post("/refine")
+async def refine(file: UploadFile = File(...)):
+
+    text = await file2text(file)
+    refined = process_and_refine_text(text)
+
+    # 문자 마무리 처리
+    refined = refined.replace("\n","") # 줄바꿈문자 삭제
+    refined = re.sub(r'<h4>', '<h1>', refined, count=1)  # 첫 번째 <h4> -> <h1> ( 제목 )
+    refined = re.sub(r'</h4>', '</h1>', refined, count=1)  # 첫 번째 닫는 </h4> -> </h1>
+
+    return refined
+
+# 모든 PDF -> HTML 처리
+@app.post("/standard")
+async def refine():
+    folder_path = 'standard'
+    await extract_and_process_pdfs(folder_path)
+
+    # 결과를 저장
+    # result_df.to_sql("standard", conn, if_exists="append", index=True, index_label="id", dtype={'refined_text': types.TEXT()}) # SQL 저장
 
 
-        
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="0.0.0.0", port=8000, ws_max_size=1024 * 1024 * 50)  # Increase to 50MB
 

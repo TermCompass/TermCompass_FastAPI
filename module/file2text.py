@@ -7,12 +7,13 @@ import asyncio
 from fastapi import UploadFile
 from pdfminer.high_level import extract_text
 from pathlib import Path
-async def file2text(file: UploadFile):
+async def file2text(file: UploadFile, type : str = "None"):
 
-    # print(file.content_type)
+    print("content_type : ",file.content_type)
+    print("sub_content_type : ",type)
 
     # pdf인 경우
-    if file.content_type == "application/pdf":
+    if file.content_type == "application/pdf" or type == "application/pdf":
 
         # file 읽기
         content = await file.read()

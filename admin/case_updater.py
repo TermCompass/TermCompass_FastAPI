@@ -27,9 +27,9 @@ conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@
 import openai
 
 #파일의 apikey불러오기
-openai_api_key_path = "./admin/api_key/openai_api_key.txt"
-with open(openai_api_key_path, "r") as f:
-    openai_api_key = f.read()
+# openai_api_key_path = "./admin/api_key/openai_api_key.txt"
+# with open(openai_api_key_path, "r") as f:
+#     openai_api_key = f.read()
 
 client = openai.OpenAI(
         api_key=OPENAI_KEY,

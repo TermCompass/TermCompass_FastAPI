@@ -10,7 +10,7 @@ df = df[['id', 'company_id', 'content', 'evaluation', 'title', 'summary']]
 print("✅ 컬럼 순서를 termlist 테이블과 동일하게 변경 완료!")
 
 # DataFrame을 MySQL 테이블에 삽입
-df.to_sql("termlist", conn, if_exists="append", index=False, method="multi")
+df.to_sql("term_list", conn, if_exists="append", index=False, method="multi")
 
 print("엑셀 데이터를 MySQL 테이블에 성공적으로 삽입했습니다!")
 

@@ -282,10 +282,64 @@ def update_law():
     list_law2 = load_list_law_api()
     list_law2 = call_list_law(law=list_law2)
 
-    ##### 두 DataFrame을 비교하기 (데이터 처리)
-    # - 기존 법령목록 DB에도 있고, 최신 법령 목록에도 있는 법령 -> 유지
-    # None
+    # ##### 두 DataFrame을 비교하기 (데이터 처리)
+    # # - 기존 법령목록 DB에도 있고, 최신 법령 목록에도 있는 법령 -> 유지
+    # # None
 
+    # # - 기존 법령목록 DB에 있지만, 최신 법령 목록에는 없는 법령 -> 삭제
+    # df_only_in_list_law1 = list_law1[~list_law1['law_id'].isin(list_law2['law_id'])]
+    # if len(df_only_in_list_law1) != 0:
+    #     print(df_only_in_list_law1)
+        
+    #     name_list = []
+    #     for name in df_only_in_list_law1['law_name']:
+    #         name_list.append(name)
+
+    #     ids_list = []
+    #     for id in df_only_in_list_law1['law_id']:
+    #         ids_list.append(id)
+
+    #     # DB 연결 및 테이블 삭제
+    #     for law_id, law_name in zip(ids_list, name_list):
+    #         # 테이블 이름 생성
+    #         law_na = law_name.replace(' ', '_')
+    #         key_table_name = f"{law_id}_{law_na}"
+    #         table_name = f""
+
+    #         # key_table_name 삭제 시도
+    #         try:
+    #             drop_query = text(f"DROP TABLE IF EXISTS `{key_table_name}`;")
+    #             conn.execute(drop_query)
+    #             print(f"테이블 '{key_table_name}' 삭제 완료.")
+    #         except Exception as e:
+    #             print(f"테이블 '{key_table_name}' 삭제 실패: {e}")
+
+    #         # table_name 삭제 시도
+    #         try:
+    #             drop_query = text(f"DROP TABLE IF EXISTS `{table_name}`;")
+    #             conn.execute(drop_query)
+    #             print(f"테이블 '{table_name}' 삭제 완료.")
+    #         except Exception as e:
+    #             print(f"테이블 '{table_name}' 삭제 실패: {e}")
+
+    # list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
+    # print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
+
+    # df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
+    # if len(df_only_in_list_law2) != 0:
+    #     # keyword 추출용 DB 생성, AI 모델 학습용 DB 생성
+    #     # 해당 DB 생성하는 코드 작성 필요!
+    #     process_row_law(law=df_only_in_list_law2)
+    #     keyword_law(law=df_only_in_list_law2)
+
+
+    #     list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
+    #     print(f"[update_law] {len(df_only_in_list_law2)}개의 법령 최신화 (생성)")
+
+    # if (len(df_only_in_list_law1) == 0) and (len(df_only_in_list_law2) == 0):
+    #     print("[update_law] 현재 법령목록이 최신 상태입니다!")
+    # # return 없음!
+    
     # - 기존 법령목록 DB에 있지만, 최신 법령 목록에는 없는 법령 -> 삭제
     df_only_in_list_law1 = list_law1[~list_law1['law_id'].isin(list_law2['law_id'])]
     if len(df_only_in_list_law1) != 0:
@@ -295,36 +349,34 @@ def update_law():
         for name in df_only_in_list_law1['law_name']:
             name_list.append(name)
 
-        ids_list = []
-        for id in df_only_in_list_law1['law_id']:
-            ids_list.append(id)
+
+            
 
         # DB 연결 및 테이블 삭제
-        with conn.connect() as conn:
-            for law_id, law_name in zip(ids_list, name_list):
-                # 테이블 이름 생성
-                law_na = law_name.replace(' ', '_')
-                key_table_name = f"{law_id}_{law_na}"
-                table_name = f""
+        for law_id, law_name in zip(ids_list, name_list):
+            # 테이블 이름 생성
+            law_na = law_name.replace(' ', '_')
+            key_table_name = f"{law_id}_{law_na}"
+            table_name = f""
 
-                # key_table_name 삭제 시도
-                try:
-                    drop_query = text(f"DROP TABLE IF EXISTS `{key_table_name}`;")
-                    conn.execute(drop_query)
-                    print(f"테이블 '{key_table_name}' 삭제 완료.")
-                except Exception as e:
-                    print(f"테이블 '{key_table_name}' 삭제 실패: {e}")
+            # key_table_name 삭제 시도
+            try:
+                drop_query = text(f"DROP TABLE IF EXISTS `{key_table_name}`;")
+                conn.execute(drop_query)
+                print(f"테이블 '{key_table_name}' 삭제 완료.")
+            except Exception as e:
+                print(f"테이블 '{key_table_name}' 삭제 실패: {e}")
 
-                # table_name 삭제 시도
-                try:
-                    drop_query = text(f"DROP TABLE IF EXISTS `{table_name}`;")
-                    conn.execute(drop_query)
-                    print(f"테이블 '{table_name}' 삭제 완료.")
-                except Exception as e:
-                    print(f"테이블 '{table_name}' 삭제 실패: {e}")
+            # table_name 삭제 시도
+            try:
+                drop_query = text(f"DROP TABLE IF EXISTS `{table_name}`;")
+                conn.execute(drop_query)
+                print(f"테이블 '{table_name}' 삭제 완료.")
+            except Exception as e:
+                print(f"테이블 '{table_name}' 삭제 실패: {e}")
 
-        list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
-        print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
+    list_law2.to_sql("list_law", conn, if_exists="replace", index=False)
+    print(f"[update_law] {len(df_only_in_list_law1)}개의 법령 최신화 (삭제)")
 
     df_only_in_list_law2 = list_law2[~list_law2['law_id'].isin(list_law1['law_id'])]
     if len(df_only_in_list_law2) != 0:

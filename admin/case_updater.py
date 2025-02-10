@@ -10,7 +10,7 @@ import json
 import os
 
 # 웹소켓 send 함수
-from module.websocket_sender import ws_send
+# from module.websocket_sender import ws_send
 
 # SQLAlchemy 엔진 생성
 from sqlalchemy import create_engine, inspect
@@ -21,8 +21,8 @@ MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
 LAW_OPEN_DATA_APIKEY = os.environ.get('LAW_OPEN_DATA_APIKEY') # 국가법령정보 공동활용 API 키 값
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
-conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:3306/TermCompass')
-# from module.global_var import conn
+# conn = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@localhost:330/TermCompass')
+from module.global_var import conn
 
 
 # OpenAPI 클라이언트 설정

@@ -11,3 +11,10 @@ admin/__pycache__/*
 module/term_spliter.old.py
 test/*
 .env
+db_test1.py
+db_test2.py
+db_test3.py
+termlist.ipynb
+site_rank.py
+termlist.py
+

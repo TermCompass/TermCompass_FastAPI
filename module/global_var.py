@@ -26,3 +26,6 @@ conn2 = create_engine(f'mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}
 
 # OpenAI API Key
 OPENAI_KEY = os.environ.get('OPENAI_KEY')
+
+# open.law API ID
+OPEN_LAW = os.environ.get('OPEN_LAW')

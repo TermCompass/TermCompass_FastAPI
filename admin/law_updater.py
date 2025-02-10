@@ -13,6 +13,7 @@ import os
 from sqlalchemy import create_engine, text
 
 from module.global_var import OPENAI_KEY
+from module.global_var import OPEN_LAW
 
 # # SQLAlchemy 엔진 생성
 MYSQL_USERNAME = os.environ.get('MYSQL_USERNAME')
@@ -137,7 +138,7 @@ def load_list_db(table_name = "list_law"):
         print(f"[load_list_db] {table_name} 테이블이 존재하지 않습니다.")
 
         # 테이플 열 이름 참고를 위한 데이터 1개 불러오기
-        df = load_list_law_api(api_key="kyj9447", PageNumbers=1, display=1)
+        df = load_list_law_api(api_key=OPEN_LAW, PageNumbers=1, display=1)
         columns = df.columns
 
         # 빈 데이터프레임 생성
@@ -150,7 +151,7 @@ def load_list_db(table_name = "list_law"):
         return empty_df
     
 
-def process_row_law(law, api_key = "kyj9447"):
+def process_row_law(law, api_key = OPEN_LAW):
     """
     법령목록을 활용하여, 세부 법령 DataBase를 생성하는 함수.
     """
@@ -334,7 +335,7 @@ def update_law():
     # return 없음!
 
 
-def keyword_law(law, api_key = "kyj9447"):
+def keyword_law(law, api_key = OPEN_LAW):
     """
     법령일련번호를 활용하여 세부 법령내용을 키워드 추출용 DB형태로 만드는 함수.
     """

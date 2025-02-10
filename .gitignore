@@ -12,3 +12,4 @@ module/term_spliter.old.py
 test/*
 standard/*
 output.xlsx
+requirements.txt.old

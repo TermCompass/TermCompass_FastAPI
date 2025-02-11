@@ -13,4 +13,4 @@ COPY . .
 EXPOSE 8000
 
 # CMD 실행: uvicorn 실행 명령어를 명확하게 작성합니다.
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ws-max-size", "52428800"]  # 50MB

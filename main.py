@@ -29,7 +29,7 @@ print("모델 객체 타입 " + str(type(model)))
 print("토크나이저 객체 타입 " + str(type(tokenizer)))
 
 # 로드 후 전역 변수 업데이트
-from admin import case_updater
+from admin import case_updater, law_updater
 import module.global_var as global_var
 global_var.model = model
 global_var.tokenizer = tokenizer

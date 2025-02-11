@@ -2,6 +2,7 @@
 # generate 파라미터 등을 일원화 관리하기 위해 모듈화
 import json
 import re
+import os
 
 from openai import OpenAI
 

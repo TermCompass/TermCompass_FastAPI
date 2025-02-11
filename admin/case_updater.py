@@ -129,7 +129,8 @@ def load_list_api(api_key = OPEN_LAW, PageNumbers = 3, display = 100):
     기본설정은 최신 판례 300개의 목록을 가져오도록 설정되어있습니다. (PageNumber = 3)
     """
     for PageNumber in range(1, PageNumbers+1):
-        url = f"http://www.law.go.kr/DRF/lawSearch.do?OC={api_key}&target=prec&display={display}&page={PageNumber}&search=2&query=약관"
+        # url = f"http://www.law.go.kr/DRF/lawSearch.do?OC={api_key}&target=prec&display={display}&page={PageNumber}&search=2&query=약관"
+        url = f"http://www.law.go.kr/DRF/lawSearch.do?OC={api_key}&target=prec&display={display}&page={PageNumber}&search=2"
         print(url)
         response = requests.get(url)
         xml_str = response.text
@@ -254,7 +255,7 @@ def process_row(id):
         "case_type": root.findtext("사건종류명"),
         "judgment_type": root.findtext("판결유형"),
         "summary": llm_model_for_summarize_case_law1(root.findtext("판례내용")),
-        "holding": llm_model_for_summarize_case_law2(root.findtext("판결요지")),
+        # "holding": llm_model_for_summarize_case_law2(root.findtext("판결요지")),
         # "path":  json_file_path,
     }
 
@@ -338,6 +339,9 @@ def update_case_law():
     df1 = load_list_api(api_key=OPEN_LAW, PageNumbers=3, display=100) # 최신 판례 로드 10개 (API)
     df2 = load_list_db() # DB의 기존 판례 로드
 
+    df1['case_id'] = df1['case_id'].astype(str)
+    df2['case_id'] = df2['case_id'].astype(str)
+    
     # 'case_id'을 기준으로 차집합 생성
     target_df = df1.merge(df2, how='left', indicator=True)
     target_df = target_df[target_df['_merge'] == 'left_only'].drop(columns=['_merge'])

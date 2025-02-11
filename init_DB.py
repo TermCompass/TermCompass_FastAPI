@@ -40,6 +40,10 @@ df.to_sql("term_list", conn, if_exists="append", index=False, method="multi")
 
 print("✅ 엑셀 데이터를 term_list 테이블에 성공적으로 삽입했습니다!")
 
+
+# ===============
+# ===============
+
 # ✅ site_rank.xlsx 파일을 읽어서 DataFrame으로 변환
 file_path = "./site_rank.xlsx"
 df = pd.read_excel(file_path)
@@ -48,3 +52,33 @@ df = pd.read_excel(file_path)
 df.to_sql("company", conn, if_exists="append", index=False, method="multi")
 
 print("✅ 엑셀 데이터를 company 테이블에 성공적으로 삽입했습니다!")
+
+# ===============
+# ===============
+
+# ✅ 엑셀 파일을 읽어서 DataFrame으로 변환
+file_path = "./CaseLaw_List.xlsx"
+df = pd.read_excel(file_path)
+
+# 테이블 스키마에 맞게 DataFrame 컬럼 재정의
+df = df[['case_id', 'case_name', 'judgment_date']]
+
+# ✅ DataFrame을 MySQL 테이블에 삽입
+df.to_sql("case_law", conn, if_exists="append", index=False, method="multi")
+
+print("✅ 엑셀 데이터를 case_law 테이블에 성공적으로 삽입했습니다!")
+
+# ===============
+# ===============
+
+# ✅ 엑셀 파일을 읽어서 DataFrame으로 변환
+file_path = "./CaseLaw_Summary.xlsx"
+df = pd.read_excel(file_path)
+
+# 테이블 스키마에 맞게 DataFrame 컬럼 재정의
+df = df[['case_id', 'case_name', 'judgment_date', 'verdict', 'court_name', 'judgment_type', 'summary', 'path']]
+
+# ✅ DataFrame을 MySQL 테이블에 삽입
+df.to_sql("case_law_summary", conn, if_exists="append", index=False, method="multi")
+
+print("✅ 엑셀 데이터를 case_law_summary 테이블에 성공적으로 삽입했습니다!")

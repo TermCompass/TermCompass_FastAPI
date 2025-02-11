@@ -278,15 +278,33 @@ async def update_case(websocket: WebSocket):
     #     except asyncio.exceptions.CancelledError:
     #         pass  # 취소된 작업이므로 예외를 무시하고 처리
 
+# ================
+# 법령 데이터 최신화
+# ================
 @app.get("/law_setting")
 def law_setting():
     law_updater.init_setup()
-
 
 @app.get("/law_update")
 def law_update():
     law_updater.update_law()
         
+# ================
+# 판례 데이터 최신화
+# ================
+# @app.get("/case_setting")
+# def case_setting():
+#     case_updater.init_setup()
+
+@app.get("/case_update")
+def case_update():
+    case_updater.update_case_law()
+    
+
+# ================
+# 실행
+# ================
+
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="0.0.0.0", port=8000, ws_max_size=1024 * 1024 * 50)  # Increase to 50MB
 

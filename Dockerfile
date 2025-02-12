@@ -2,6 +2,18 @@ FROM python:3.12.8-slim
 
 WORKDIR /app
 
+# Install libreoffice and libreoffice-H2orestart
+RUN apt-get update 
+
+RUN apt-get install -y libreoffice 
+RUN apt install -y libreoffice-h2orestart 
+
+RUN apt-get install -y language-pack-ko
+RUN locale-gen ko_KR.UTF-8 ko_KR.EUC
+RUN update-locale LANG=ko_KR.UTF-8
+
+RUN apt-get clean
+
 # 캐시 활용: requirements.txt 파일이 변경되지 않으면 이 단계는 다시 실행되지 않습니다.
 COPY requirements.txt .
 

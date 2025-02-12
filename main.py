@@ -13,8 +13,8 @@ app = FastAPI()
 # 0-1. 모델 로드 ------------------------------------------------------------------------------------
 
 # 모델과 토크나이저 로드
-model_name = "Bllossom/llama-3.2-Korean-Bllossom-3B"
-model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+model_name = "/app/models/llama-3.2-Korean-Bllossom-3B"
+model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto", local_files_only=True)
 tokenizer = PreTrainedTokenizerFast.from_pretrained(model_name)
 
 # 패딩 토큰 설정

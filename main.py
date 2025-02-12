@@ -14,7 +14,7 @@ app = FastAPI()
 
 # 모델과 토크나이저 로드
 model_name = "Bllossom/llama-3.2-Korean-Bllossom-3B"
-model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
+model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32, device_map="auto")
 tokenizer = PreTrainedTokenizerFast.from_pretrained(model_name)
 
 # 패딩 토큰 설정

@@ -7,9 +7,11 @@ COPY requirements.txt .
 
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Hugging Face 모델 다운로드 및 복사
+# Hugging Face 모델 및 토크나이저 다운로드 및 복사
 RUN pip install transformers
-RUN python -c "from transformers import AutoModelForCausalLM; AutoModelForCausalLM.from_pretrained('Bllossom/llama-3.2-Korean-Bllossom-3B').save_pretrained('/app/models/llama-3.2-Korean-Bllossom-3B')"
+RUN python -c "from transformers import AutoModelForCausalLM, PreTrainedTokenizerFast; \
+    AutoModelForCausalLM.from_pretrained('Bllossom/llama-3.2-Korean-Bllossom-3B').save_pretrained('/app/models/llama-3.2-Korean-Bllossom-3B'); \
+    PreTrainedTokenizerFast.from_pretrained('Bllossom/llama-3.2-Korean-Bllossom-3B').save_pretrained('/app/models/llama-3.2-Korean-Bllossom-3B')"
 
 COPY . .
 

@@ -4,5 +4,4 @@ etc/
 standard/
 docker run.txt
 env-file.env
-**__pycache__**
 admin/__pycache__/law_updater.cpython-312.pyc

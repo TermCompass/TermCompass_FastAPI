@@ -20,11 +20,6 @@ from module.global_var import conn, OPENAI_KEY, OPEN_LAW
 # OpenAPI 클라이언트 설정
 import openai
 
-#파일의 apikey불러오기
-# openai_api_key_path = "./admin/api_key/openai_api_key.txt"
-# with open(openai_api_key_path, "r") as f:
-#     openai_api_key = f.read()
-
 client = openai.OpenAI(
         api_key=OPENAI_KEY,
     )

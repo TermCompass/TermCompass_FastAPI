@@ -1,23 +1,27 @@
-FROM python:3.12.8-slim
+FROM ubuntu:24.04
 
 WORKDIR /app
 
-# Install libreoffice and libreoffice-H2orestart
-RUN apt-get update 
+# Install libreoffice and libreoffice-h2orestart
+RUN apt-get update
 
-RUN apt-get install -y libreoffice 
-RUN apt install -y libreoffice-h2orestart 
+RUN apt-get install -y language-pack-ko && locale-gen ko_KR.UTF-8 ko_KR.EUC-KR && update-locale LANG=ko_KR.UTF-8
 
-RUN apt-get install -y language-pack-ko
-RUN locale-gen ko_KR.UTF-8 ko_KR.EUC
-RUN update-locale LANG=ko_KR.UTF-8
+RUN apt-get install -y libreoffice libreoffice-h2orestart
 
 RUN apt-get clean
 
-# 캐시 활용: requirements.txt 파일이 변경되지 않으면 이 단계는 다시 실행되지 않습니다.
+# Install Python 3 and pip
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv
+
+# Upgrade pip
+# RUN python3 -m pip install --upgrade pip --break-system-packages
+
+# 3. requirements.txt 파일 복사
 COPY requirements.txt .
 
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# 4. requirements.txt에 있는 패키지 설치 (python3 -m pip을 사용하여 pip 명령어 호출)
+RUN python3 -m pip install -r requirements.txt --break-system-packages
 
 COPY . .
 

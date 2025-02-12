@@ -15,8 +15,8 @@ RUN sed -i 's/^# *\(ko_KR.UTF-8\)/\1/' /etc/locale.gen && \
     update-locale LANG=ko_KR.UTF-8
 
 # 3. 환경 변수 설정 (이렇게 하면 런타임에도 적용됨)
-ENV LANG ko_KR.UTF-8
-ENV LC_ALL ko_KR.UTF-8
+ENV LANG=ko_KR.UTF-8
+ENV LC_ALL=ko_KR.UTF-8
 
 # 4. libreoffice 및 libreoffice-h2orestart 설치
 RUN apt-get install -y libreoffice libreoffice-h2orestart && \

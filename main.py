@@ -14,7 +14,7 @@ app = FastAPI()
 
 # 모델과 토크나이저 로드
 model_name = "Bllossom/llama-3.2-Korean-Bllossom-3B"
-model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32, device_map="auto")
+model = LlamaForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16, device_map="auto")
 tokenizer = PreTrainedTokenizerFast.from_pretrained(model_name)
 
 # 패딩 토큰 설정
@@ -65,9 +65,6 @@ async def update_case(websocket: WebSocket):
     # 웹소켓 입력 후 명령 입력받음
     await websocket.accept()
 
-    # 자동 ping 설정
-    ping_task = asyncio.create_task(ping_client(websocket))
-
     # 종료 명령까지 지속 실행
     try:
         while True:
@@ -87,6 +84,9 @@ async def update_case(websocket: WebSocket):
                 await websocket.close()
 
             elif type == 'review':
+                
+                # 자동 ping 설정
+                ping_task = asyncio.create_task(ping_client(websocket))
 
                 # 내용물 확인
                 content = jsondata['content']

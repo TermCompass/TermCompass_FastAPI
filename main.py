@@ -84,7 +84,7 @@ async def update_case(websocket: WebSocket):
                 await websocket.close()
 
             elif type == 'review':
-                
+
                 # 자동 ping 설정
                 ping_task = asyncio.create_task(ping_client(websocket))
 
@@ -147,6 +147,11 @@ async def update_case(websocket: WebSocket):
                 await websocket.send_json({"type": "end"})
                 await asyncio.sleep(0)
                 await websocket.close()
+
+                # Ping task 종료
+                ping_task.cancel()
+                await ping_task  # ping_task가 정상적으로 종료될 때까지 기다림
+
                 break
 
     except WebSocketDisconnect as e:
@@ -157,10 +162,6 @@ async def update_case(websocket: WebSocket):
         print(f"기타 예외 발생 : {e}")
         traceback.print_exc()
 
-    finally:
-        # Ping task 종료
-        ping_task.cancel()
-        await ping_task  # ping_task가 정상적으로 종료될 때까지 기다림
 
 # ================
 # 법령 데이터 최신화
